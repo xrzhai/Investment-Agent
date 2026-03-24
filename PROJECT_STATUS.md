@@ -1,6 +1,6 @@
 # Investment Agent — 项目进度与架构
 
-> 最后更新：2026-03-24（Position Metadata 系统 + pm:suggest 完整闭环 + Reviews 存档系统）
+> 最后更新：2026-03-24（P&L 曲线记录系统 + A 股持仓整合）
 > 开发者：个人独立开发
 > 定位：个人投资 Copilot，自用第一，Claude Code 主接口 + CLI 辅助
 
@@ -25,7 +25,8 @@
 | CLI | Typer + Rich |
 | Domain Models | Pydantic v2 |
 | 数据库 | SQLite + SQLModel |
-| 市场数据 | yfinance（免费，美股/ETF） |
+| 市场数据 | yfinance（免费，美股/ETF）+ JQData（A 股） |
+| 可视化 | plotext（终端 ASCII 折线图） |
 | LLM | Anthropic Claude API（claude-sonnet-4-6） |
 | 运行方式 | `python run.py <命令>` |
 
@@ -71,7 +72,8 @@ investment-agent/
 │   ├── tools/                      # Claude Code 调用层（输出 JSON）
 │   │   ├── portfolio_tools.py      # python app/tools/portfolio_tools.py [--refresh]
 │   │   ├── policy_tools.py         # python app/tools/policy_tools.py
-│   │   └── position_meta_tools.py  # python app/tools/position_meta_tools.py read/write
+│   │   ├── position_meta_tools.py  # python app/tools/position_meta_tools.py read/write
+│   │   └── pnl_tools.py            # python app/tools/pnl_tools.py --record/--cashflow/--curve
 │   │
 │   └── prompts/                    # LLM prompt 模板
 │       ├── daily_review.md         # 日检报告结构
@@ -80,9 +82,11 @@ investment-agent/
 ├── .claude/
 │   └── commands/                   # Slash commands（Claude Code 工作流）
 │       ├── pm/                     # 组合管理角色
-│       │   ├── daily.md            # /pm:daily — 完整日检
-│       │   ├── suggest.md          # /pm:suggest — 可操作建议（含 Step 7 存档）
-│       │   └── snapshot.md         # /pm:snapshot — 快速持仓快照
+│       │   ├── daily.md            # /pm:daily — 完整日检（自动打 P&L 快照）
+│       │   ├── suggest.md          # /pm:suggest — 可操作建议（含 Step 7 存档，自动打快照）
+│       │   ├── snapshot.md         # /pm:snapshot — 快速持仓快照
+│       │   ├── curve.md            # /pm:curve — P&L 曲线展示（ASCII 折线图）
+│       │   └── cashflow.md         # /pm:cashflow — 记录入出金事件
 │       ├── researcher/             # 研究员角色（Coverage 工作流）
 │       │   ├── initiate.md         # /researcher:initiate — 发起覆盖
 │       │   ├── update.md           # /researcher:update — 更新覆盖
@@ -95,11 +99,12 @@ investment-agent/
 │
 ├── coverage/                       # 投资论点（每支股票一个子目录）
 │   ├── COVERAGE_WORKFLOW.md        # 工作流文档（核心原则、流程、质量控制）
-│   ├── COVERAGE_LOG.md             # 所有持仓覆盖状态一览（10 个标的）
+│   ├── COVERAGE_LOG.md             # 所有持仓覆盖状态一览（13 个标的）
 │   ├── THESIS_TEMPLATE.md          # 空白模板（三维度结构）
 │   ├── NVDA/  META/  TSM/  GOOGL/  # 已覆盖（各含 v1..vN + current.md）
 │   ├── ALLW/  BMNR/  MSFT/  NFLX/
 │   ├── PDD/   BTC-USD/
+│   ├── 000975.SZ/  601899.SH/  600036.SH/  # A 股（JQData + WebSearch）
 │   └── {SYMBOL}/                   # vN_YYYY-MM-DD.md + current.md（指针）
 │
 ├── reviews/                        # 组合级分析存档（按事件类型分，与 coverage 平行）
@@ -250,20 +255,23 @@ python app/tools/position_meta_tools.py write SYMBOL [args] # 写入 metadata
 - [x] `coverage/COVERAGE_LOG.md` 总览（10 个标的覆盖状态一览）
 - [x] `coverage/COVERAGE_WORKFLOW.md` — 完整工作流文档（核心原则、发起/更新流程、Thesis Checklist、数据质量规范）
 - [x] Claude Code Researcher Skills（`.claude/commands/researcher/`）完整集成
-- [x] **10 个标的全部建立初始覆盖（含覆盖历史和 IC）：**
+- [x] **13 个标的全部建立初始覆盖（含覆盖历史和 IC）：**
 
-  | Symbol | 最新版本 | 完成日期 |
-  | --- | --- | --- |
-  | NVDA | v4（yfinance 年份修正） | 2026-03-17 |
-  | META | v2（yfinance 年份修正） | 2026-03-17 |
-  | TSM | v2（yfinance 年份修正） | 2026-03-17 |
-  | GOOGL | v2（yfinance 年份修正） | 2026-03-17 |
-  | ALLW | v1 | 2026-03-18 |
-  | BMNR | v1 | 2026-03-20 |
-  | MSFT | v1 | 2026-03-20 |
-  | NFLX | v1 | 2026-03-20 |
-  | PDD | v1 | 2026-03-20 |
-  | BTC-USD | v1 | 2026-03-24 |
+  | Symbol | 最新版本 | 完成日期 | 数据源 |
+  | --- | --- | --- | --- |
+  | NVDA | v4（yfinance 年份修正） | 2026-03-17 | yfinance |
+  | META | v2（yfinance 年份修正） | 2026-03-17 | yfinance |
+  | TSM | v2（yfinance 年份修正） | 2026-03-17 | yfinance |
+  | GOOGL | v2（yfinance 年份修正） | 2026-03-17 | yfinance |
+  | ALLW | v1 | 2026-03-18 | yfinance |
+  | BMNR | v1 | 2026-03-20 | yfinance |
+  | MSFT | v1 | 2026-03-20 | yfinance |
+  | NFLX | v1 | 2026-03-20 | yfinance |
+  | PDD | v1 | 2026-03-20 | yfinance |
+  | BTC-USD | v1 | 2026-03-24 | yfinance |
+  | 000975.SZ | v4（FY2025 年报 + 黄金/白银情景矩阵） | 2026-03-24 | JQData + WebSearch |
+  | 601899.SH | v3（铜价情景系统化 + 2D EPS 敏感性） | 2026-03-24 | JQData + WebSearch |
+  | 600036.SH | v1 | 2026-03-24 | JQData + WebSearch |
 
 - [x] `config/principles.md` 完整填写（7 个模块：选股/开仓/组合/调仓/离场/风控/复盘）
 
@@ -318,6 +326,26 @@ python app/tools/position_meta_tools.py write SYMBOL [args] # 写入 metadata
 - [x] `reviews/daily/` — pm:daily 输出预留目录
 - [x] 存档文档标准格式（Frontmatter / Executive Summary / 组合诊断 / 个股建议表 / 数据快照 / 执行跟踪）
 - [x] 首份存档：`reviews/suggest/2026-03-24_suggest.md`
+
+---
+
+### Phase 5e — P&L 曲线记录系统 ✅ 完成（2026-03-24）
+
+资金曲线与时间加权收益率（TWR）记录，支持入出金调整，终端 ASCII 折线图展示。
+
+- [x] `app/models/db.py` — 新增 `CashflowEventRow` 表；`SnapshotRow` 加 `notes` 列；`init_db()` 自动迁移
+- [x] `app/repositories/portfolio_repo.py` — 新增 `upsert_pnl_snapshot` / `save_cashflow` / `list_cashflows` / `list_snapshots_asc`
+- [x] `app/tools/pnl_tools.py` — 独立工具脚本：
+  - `--record [--notes TEXT]`：记录当日组合资金快照（upsert，同一天覆盖）
+  - `--cashflow AMOUNT [--desc TEXT]`：记录入出金事件，自动在事件前打快照保证 TWR 精度
+  - `--curve [--days N]`：用 plotext 在终端输出双图（资金曲线 + TWR 累计收益率）
+- [x] `/pm:daily` / `/pm:suggest` — Step 1 / Step 0 后自动调用 `pnl_tools.py --record`
+- [x] `.claude/commands/pm/curve.md` — `/pm:curve` 命令
+- [x] `.claude/commands/pm/cashflow.md` — `/pm:cashflow` 命令
+- [x] `requirements.txt` — 追加 `plotext`
+- [x] 历史记录清空，以 2026-03-24（$98,430 USD，A 股已合并）为 TWR 基准起点
+
+**TWR 算法：** 区间加权乘积法。每个子区间回报 = (期末 - 期间现金流) / 期初，所有子区间连乘后减 1 得累计 TWR。
 
 ---
 

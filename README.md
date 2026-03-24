@@ -13,6 +13,7 @@
 - **Coverage 系统** — 为每支持仓维护三维度结构化投资论点（Fundamental / Valuation / Technical + IC + 头寸管理），版本历史保留
 - **Position Metadata** — 每支持仓的量化 metadata：Bear/Base/Bull 目标价、期望 CAGR、主题标签、风险等级、IC 状态
 - **组合建议** — 基于主题敞口聚类、CAGR 排序、thesis 头寸规则的可操作建议，自动存档
+- **P&L 曲线记录** — 自动记录资金曲线（USD）和时间加权收益率（TWR），支持入出金事件，终端 ASCII 折线图展示
 - **投资日志** — 建仓论点、操作记录、LLM 建议统一归档
 
 ---
@@ -43,9 +44,11 @@ python run.py portfolio check
 
 ```text
 # 组合管理
-/pm:daily         # 完整日检（持仓 + 规则 + 分析）
-/pm:suggest       # 组合诊断 + 个股建议（自动存档至 reviews/）
+/pm:daily         # 完整日检（持仓 + 规则 + 分析，自动打 P&L 快照）
+/pm:suggest       # 组合诊断 + 个股建议（自动存档至 reviews/，自动打 P&L 快照）
 /pm:snapshot      # 快速持仓快照（不刷新价格）
+/pm:curve         # 显示 P&L 曲线（资金曲线 + TWR 收益曲线）
+/pm:cashflow      # 记录入出金事件（影响 TWR 计算基准）
 
 # 风险管理
 /risk:check       # policy 规则检查
@@ -89,7 +92,8 @@ investment-agent/
 │   └── tools/                      # Claude Code 调用脚本（JSON 输出）
 │       ├── portfolio_tools.py      # 持仓状态 + 实时价格
 │       ├── policy_tools.py         # policy 规则检查
-│       └── position_meta_tools.py  # position metadata 读/写
+│       ├── position_meta_tools.py  # position metadata 读/写
+│       └── pnl_tools.py            # P&L 曲线记录（--record / --cashflow / --curve）
 ├── coverage/                       # 投资论点（每支股票一个子目录）
 │   ├── COVERAGE_LOG.md             # 10 个标的覆盖状态一览
 │   ├── COVERAGE_WORKFLOW.md        # 核心工作流规范
@@ -181,4 +185,4 @@ python app/tools/position_meta_tools.py write NVDA \
 
 详见 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
 
-**当前状态（2026-03-24）：** Phase 1–5d 全部完成。10 个标的均有 Coverage thesis + Position metadata。`/pm:suggest` 可正常运行并存档。
+**当前状态（2026-03-24）：** Phase 1–5e 全部完成。13 个标的均有 Coverage thesis + Position metadata。`/pm:suggest` 可正常运行并存档。P&L 曲线记录功能上线，以 $98,430 为基准点开始追踪。

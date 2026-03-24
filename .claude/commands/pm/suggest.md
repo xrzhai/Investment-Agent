@@ -8,6 +8,12 @@ Run:
 /c/Users/zhaix/miniconda3/envs/work/python.exe app/tools/portfolio_tools.py --refresh
 ```
 
+After prices are refreshed, record a P&L snapshot:
+
+```
+/c/Users/zhaix/miniconda3/envs/work/python.exe app/tools/pnl_tools.py --record --notes "suggest"
+```
+
 For each position, check if `coverage/{SYMBOL}/current.md` exists.
 
 **If any position lacks coverage → STOP.** Output:
