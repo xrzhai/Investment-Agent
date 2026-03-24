@@ -9,7 +9,7 @@ from typing import Optional
 
 from sqlmodel import Session, select
 
-from app.models.db import PositionRow, SnapshotRow, get_session
+from app.models.db import CashflowEventRow, PositionRow, SnapshotRow, get_session
 from app.models.domain import Position, PortfolioSnapshot
 
 
@@ -131,4 +131,63 @@ def list_snapshots(limit: int = 30) -> list[SnapshotRow]:
     with get_session() as session:
         return session.exec(
             select(SnapshotRow).order_by(SnapshotRow.snapshot_date.desc()).limit(limit)
+        ).all()
+
+
+def list_snapshots_asc() -> list[SnapshotRow]:
+    """Return all snapshots ordered by date ascending (for TWR calculation)."""
+    with get_session() as session:
+        return session.exec(
+            select(SnapshotRow).order_by(SnapshotRow.snapshot_date.asc())
+        ).all()
+
+
+def upsert_pnl_snapshot(total_value_usd: float, notes: str = "") -> SnapshotRow:
+    """
+    Insert or update today's snapshot for P&L curve tracking.
+    If a row for today already exists, update its total_value and notes.
+    """
+    today = date.today()
+    with get_session() as session:
+        row = session.exec(
+            select(SnapshotRow).where(SnapshotRow.snapshot_date == today)
+        ).first()
+        if row:
+            row.total_value = total_value_usd
+            row.notes = notes
+        else:
+            row = SnapshotRow(
+                snapshot_date=today,
+                total_value=total_value_usd,
+                notes=notes,
+            )
+            session.add(row)
+        session.commit()
+        session.refresh(row)
+        return row
+
+
+# ---------------------------------------------------------------------------
+# Cashflow events
+# ---------------------------------------------------------------------------
+
+def save_cashflow(event_date: date, amount_usd: float, description: str = "") -> CashflowEventRow:
+    """Record a deposit (positive) or withdrawal (negative) event."""
+    with get_session() as session:
+        row = CashflowEventRow(
+            event_date=event_date,
+            amount_usd=amount_usd,
+            description=description,
+        )
+        session.add(row)
+        session.commit()
+        session.refresh(row)
+        return row
+
+
+def list_cashflows() -> list[CashflowEventRow]:
+    """Return all cashflow events ordered by date ascending."""
+    with get_session() as session:
+        return session.exec(
+            select(CashflowEventRow).order_by(CashflowEventRow.event_date.asc())
         ).all()

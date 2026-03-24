@@ -50,6 +50,12 @@ def init_db():
     for col, col_type in new_cols:
         if col not in existing:
             conn.execute(f"ALTER TABLE positions ADD COLUMN {col} {col_type}")
+
+    # Migrate snapshots table
+    snap_existing = {row[1] for row in conn.execute("PRAGMA table_info(snapshots)")}
+    if "notes" not in snap_existing:
+        conn.execute("ALTER TABLE snapshots ADD COLUMN notes TEXT")
+
     conn.commit()
     conn.close()
 
@@ -111,6 +117,17 @@ class SnapshotRow(SQLModel, table=True):
     max_drawdown_pct: float = 0.0
     top_position_weight: float = 0.0
     positions_json: str = "{}"        # serialized list[Position]
+    notes: Optional[str] = Field(default=None)  # e.g. "daily" / "suggest" / "manual"
+
+
+class CashflowEventRow(SQLModel, table=True):
+    __tablename__ = "cashflow_events"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    event_date: date = Field(index=True)
+    amount_usd: float               # positive = deposit, negative = withdrawal
+    description: str = ""
+    created_at: datetime = Field(default_factory=datetime.now)
 
 
 class EventRow(SQLModel, table=True):

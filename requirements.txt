@@ -5,3 +5,4 @@ sqlmodel
 yfinance
 rich
 jqdatasdk
+plotext
