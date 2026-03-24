@@ -1,0 +1,18 @@
+# Credentials & secrets
+.env
+.claude/settings.local.json
+
+# Database
+data/*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# OS
+.DS_Store
+Thumbs.db

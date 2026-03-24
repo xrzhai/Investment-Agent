@@ -1,0 +1,14 @@
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+
+# Database binary
+data/*.db
+
+# Philosophy / reference notes — read only when explicitly needed
+mine investment policy/
+
+# Historical thesis versions — only current.md is needed day-to-day
+# Pattern: vN_YYYY-MM-DD.md under any coverage subdirectory
+coverage/**/v*_*.md

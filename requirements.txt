@@ -1,0 +1,7 @@
+anthropic
+typer
+pydantic
+sqlmodel
+yfinance
+rich
+jqdatasdk
