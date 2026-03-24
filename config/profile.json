@@ -1,0 +1,10 @@
+{
+  "style": "quality_growth",
+  "time_horizon": "long",
+  "risk_tolerance": "high",
+  "max_position_weight": 0.25,
+  "max_drawdown_tolerance": 0.25,
+  "min_cash_pct": 0.05,
+  "forbidden_symbols": [],
+  "notes": "商业模式优先，辅以量化三维度分析（Fundamental / Valuation / Technical）。放松单一标的波动率约束，重点管控组合系统性风险和集中度。开仓前必须建立 thesis 和明确的 Invalidation Conditions；调仓必须写调仓说明。复盘诚实，带入当时情景，不用未来数据复盘。"
+}
