@@ -1,6 +1,6 @@
 # Investment Agent — 项目进度与架构
 
-> 最后更新：2026-03-24（P&L 曲线记录系统 + A 股持仓整合）
+> 最后更新：2026-03-25（Mistake Memory 模块上线）
 > 开发者：个人独立开发
 > 定位：个人投资 Copilot，自用第一，Claude Code 主接口 + CLI 辅助
 
@@ -73,7 +73,8 @@ investment-agent/
 │   │   ├── portfolio_tools.py      # python app/tools/portfolio_tools.py [--refresh]
 │   │   ├── policy_tools.py         # python app/tools/policy_tools.py
 │   │   ├── position_meta_tools.py  # python app/tools/position_meta_tools.py read/write
-│   │   └── pnl_tools.py            # python app/tools/pnl_tools.py --record/--cashflow/--curve
+│   │   ├── pnl_tools.py            # python app/tools/pnl_tools.py --record/--cashflow/--curve
+│   │   └── postmortem_tools.py     # python app/tools/postmortem_tools.py --create/--approve/--recall/--list
 │   │
 │   └── prompts/                    # LLM prompt 模板
 │       ├── daily_review.md         # 日检报告结构
@@ -346,6 +347,34 @@ python app/tools/position_meta_tools.py write SYMBOL [args] # 写入 metadata
 - [x] 历史记录清空，以 2026-03-24（$98,430 USD，A 股已合并）为 TWR 基准起点
 
 **TWR 算法：** 区间加权乘积法。每个子区间回报 = (期末 - 期间现金流) / 期初，所有子区间连乘后减 1 得累计 TWR。
+
+---
+
+### Phase 5f — Mistake Memory 模块 ✅ 完成（2026-03-25）
+
+Agent 操作错误的结构化记忆系统。记录 Agent 自身的操作失误（数据误读、计算偏差、逻辑矛盾、漏步骤、格式错误），在后续任务中召回并自查，避免重复犯错。
+
+- [x] `app/models/db.py` — 新增 `MistakeMemoryRow` 表（5 类错误 + 4 核心字段 + 状态流转）；`init_db()` 自动迁移
+- [x] `app/tools/postmortem_tools.py` — 独立工具脚本：
+  - `--create`：从 stdin 读取 JSON，写入 draft 条目
+  - `--approve <id>`：draft → active（激活后才参与召回）
+  - `--retire <id>`：归档（不再召回）
+  - `--recall --task <scope> [--symbol <symbol>]`：结构化匹配，按 severity + confidence 排序，返回 top-5
+  - `--list [--status ...]`：列出全量条目
+- [x] `.claude/commands/postmortem/create.md` — `/postmortem:create`：引导用户描述错误，LLM 生成结构化草稿，写入 DB
+- [x] `.claude/commands/postmortem/list.md` — `/postmortem:list`：按 draft/active/retired 分组展示，支持 approve/retire 操作
+- [x] `.claude/commands/postmortem/check.md` — `/postmortem:check`：召回相关历史教训，逐条核查当前输出，标记 ✅/❌/⚪，自动修正 ❌ 项
+- [x] 首条记录写入验证：yfinance eps_forward 年份偏移问题（severity=high，status=active）
+
+**错误类型分类：**
+
+| mistake_type | 含义 |
+|---|---|
+| `data` | 数据读取/解析错误（字段误读、单位混用） |
+| `calculation` | 计算公式错误（CAGR 月/年混用、权重分母错误） |
+| `logic` | 逻辑矛盾（建议与 IC 状态/principles 冲突） |
+| `omission` | 漏步骤（未加载 coverage/principles 就出结论） |
+| `format` | 输出格式错误（表格错位、markdown 嵌套破坏） |
 
 ---
 

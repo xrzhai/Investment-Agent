@@ -56,6 +56,17 @@ def init_db():
     if "notes" not in snap_existing:
         conn.execute("ALTER TABLE snapshots ADD COLUMN notes TEXT")
 
+    # Migrate mistake_memories table (add columns if table already exists without them)
+    mm_tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if "mistake_memories" in mm_tables:
+        mm_existing = {row[1] for row in conn.execute("PRAGMA table_info(mistake_memories)")}
+        mm_new_cols = [
+            ("bad_outcome", "TEXT"),
+        ]
+        for col, col_type in mm_new_cols:
+            if col not in mm_existing:
+                conn.execute(f"ALTER TABLE mistake_memories ADD COLUMN {col} {col_type}")
+
     conn.commit()
     conn.close()
 
@@ -167,3 +178,31 @@ class JournalEntryRow(SQLModel, table=True):
     user_note: str = ""
     agent_note: str = ""
     linked_rec_ids: str = "[]"        # JSON list
+
+
+class MistakeMemoryRow(SQLModel, table=True):
+    __tablename__ = "mistake_memories"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    # --- Classification ---
+    mistake_type: str                          # "data" | "calculation" | "logic" | "omission" | "format"
+    task_scope: Optional[str] = Field(default=None, index=True)   # "researcher_update" | "pm_suggest" | "any" | None
+    symbol_scope: Optional[str] = Field(default=None, index=True) # specific symbol or None = any
+
+    # --- Core 4 fields ---
+    mistake: str                               # what went wrong (one sentence)
+    root_cause: str                            # why it happened
+    prevention_rule: str                       # how to avoid it (actionable rule)
+    trigger_check: str                         # when to apply this check ("when X, must verify Y before Z")
+
+    # --- Metadata ---
+    severity: str = "medium"                  # "high" | "medium" | "low"
+    confidence: float = 0.7                   # 0.0–1.0, raise after human review
+    source: str = ""                          # "user_report" | "self_detected" | "postmortem"
+    bad_outcome: Optional[str] = Field(default=None)  # impact description
+
+    # --- State ---
+    status: str = Field(default="draft", index=True)  # "draft" | "active" | "retired"
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
