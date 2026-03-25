@@ -60,6 +60,11 @@ python run.py portfolio check
 /researcher:analyze NVDA    # 单持仓深度分析
 /researcher:note NVDA       # 记录研究笔记
 /researcher:status          # 全组合覆盖状态一览
+
+# Mistake Memory（Agent 操作错误记忆）
+/postmortem:create          # 记录一条 Agent 操作错误（草稿）
+/postmortem:list            # 查看 + 管理所有错误记忆（draft/active/retired）
+/postmortem:check           # 自查：召回历史教训，逐条核查当前输出
 ```
 
 ---
@@ -93,7 +98,8 @@ investment-agent/
 │       ├── portfolio_tools.py      # 持仓状态 + 实时价格
 │       ├── policy_tools.py         # policy 规则检查
 │       ├── position_meta_tools.py  # position metadata 读/写
-│       └── pnl_tools.py            # P&L 曲线记录（--record / --cashflow / --curve）
+│       ├── pnl_tools.py            # P&L 曲线记录（--record / --cashflow / --curve）
+│       └── postmortem_tools.py     # Agent 错误记忆（--create / --approve / --recall / --list）
 ├── coverage/                       # 投资论点（每支股票一个子目录）
 │   ├── COVERAGE_LOG.md             # 10 个标的覆盖状态一览
 │   ├── COVERAGE_WORKFLOW.md        # 核心工作流规范
@@ -185,4 +191,4 @@ python app/tools/position_meta_tools.py write NVDA \
 
 详见 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
 
-**当前状态（2026-03-24）：** Phase 1–5e 全部完成。13 个标的均有 Coverage thesis + Position metadata。`/pm:suggest` 可正常运行并存档。P&L 曲线记录功能上线，以 $98,430 为基准点开始追踪。
+**当前状态（2026-03-25）：** Phase 1–5f 全部完成。13 个标的均有 Coverage thesis + Position metadata。`/pm:suggest` 可正常运行并存档。P&L 曲线记录功能上线，以 $98,430 为基准点开始追踪。Mistake Memory 模块上线，支持 Agent 操作错误的结构化记录与自查。
