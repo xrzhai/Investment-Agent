@@ -6,6 +6,7 @@
 - 用 Python 维护确定性的持仓、现金、PnL、权重与规则检查
 - 用 coverage thesis 文件维护每个标的的投资论点与失效条件
 - 用 reviews/ 归档日检、建议与决策记录
+- 用 postmortem 记录 agent 自己的操作错误，避免重复犯错
 - 让任意 AI agent 基于 workflow docs + tools 协助你完成研究与复盘
 
 ## 项目定位
@@ -30,9 +31,11 @@
    - 每个标的一份版本化 thesis，包含 Fundamental / Valuation / Technical、Invalidation Conditions、头寸管理原则
 3. Review archive
    - `reviews/` 下保留 daily / suggest / decision 等记录，便于回看与复盘
-4. Tool scripts
+4. Mistake memory
+   - 用 `postmortem_tools.py` 记录 agent 的操作错误、根因和预防规则
+5. Tool scripts
    - agent 可直接调用的工具脚本，优先输出结构化结果
-5. Thin CLI
+6. Thin CLI
    - 适合人工做原子操作：导入、刷新、查看、检查
 
 ---
@@ -65,6 +68,7 @@ python run.py analyze asset NVDA
 - coverage initiate / update
 - risk IC sweep
 - trader decision / record
+- postmortem create / list / self-check
 
 入口文档：
 - `skills/investment-agent/README.md`
@@ -129,7 +133,8 @@ investment-agent/
 ├── coverage/           # 标的 thesis 与 current.md 指针
 ├── reviews/            # daily / suggest / decision 归档
 ├── config/             # 投资原则、投资者配置
-└── data/               # SQLite DB（运行时生成）
+├── data/               # SQLite DB（运行时生成）
+└── PROJECT_STATUS.md   # 当前架构与重构进展说明
 ```
 
 ---
@@ -166,6 +171,7 @@ export INVESTMENT_AGENT_LLM_CMD=claude
 ## 当前状态
 
 这个项目已经可以作为一个开源的个人投资工作流项目使用，但仍在持续整理：
-- workflow docs 已开始独立于 agent-specific command 系统
-- CLI 正在收缩成更薄的人工入口
-- 不会扩展成前端 UI 或通用 Agent 平台
+- workflow docs 已独立于 agent-specific command 系统
+- CLI 已收缩为更薄的人工入口
+- `.claude/` 适配层已删除
+- 剩余历史性文档和归档记录会继续逐步清理，但不影响当前主结构

@@ -7,6 +7,7 @@
 - thesis 是结构化、版本化的
 - 决策与复盘有归档
 - agent 用来协助研究、检查与总结，而不是替代执行
+- agent 自己的操作错误也应被记录并召回，避免重复犯错
 
 ## 核心数据层
 
@@ -39,6 +40,7 @@
 - 所有数值计算（PnL / 权重 / CAGR / policy checks）必须由 Python 完成
 - Invalidation Conditions 是首要约束；触发时优先级高于叙事和情绪
 - 无 coverage thesis 的标的，不应直接给出 thesis-driven 的加仓建议
+- postmortem 记录的是 agent 的操作错误，不是投资观点本身
 
 ## 数据质量坑
 
@@ -97,6 +99,19 @@ Thesis 至少包含：
 - `reviews/suggest/`：组合建议输出
 - `reviews/decisions/`：调仓决策与执行记录
 - `reviews/REVIEWS_LOG.md`：统一索引
+
+## Postmortem / mistake memory
+
+使用工具：
+- `app/tools/postmortem_tools.py`
+
+用途：
+- 记录 agent 的数据误读、逻辑错误、漏步骤、格式错误
+- 在后续任务前召回相关教训，做自查
+
+不应用于：
+- 记录普通投资结论
+- 替代 coverage thesis 或 review archive
 
 ## 什么时候优先用 tools，而不是 CLI
 

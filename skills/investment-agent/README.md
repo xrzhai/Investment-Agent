@@ -18,6 +18,9 @@
    - `workflows/risk-ic.md`
    - `workflows/trader-decide.md`
    - `workflows/trader-record.md`
+   - `workflows/postmortem-create.md`
+   - `workflows/postmortem-list.md`
+   - `workflows/postmortem-check.md`
 3. 执行时优先调用：
    - `app/tools/*.py`
    - 必要时再使用薄 CLI `python run.py ...`
@@ -31,13 +34,13 @@
 
 ## 当前范围
 
-第一批迁移的 workflow：
+已迁移的 workflow：
 - Daily review
 - Researcher initiate / update
 - Risk IC sweep
 - Trader decide / record
+- Postmortem create / list / self-check
 
 后续可继续补：
 - PM suggest
 - Researcher analyze / note / status
-- Postmortem workflows
