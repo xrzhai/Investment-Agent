@@ -65,7 +65,9 @@ python run.py analyze asset NVDA
 
 适合：
 - daily review
+- portfolio suggest
 - coverage initiate / update
+- researcher analyze / note / status
 - risk IC sweep
 - trader decision / record
 - postmortem create / list / self-check
