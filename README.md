@@ -135,9 +135,25 @@ investment-agent/
 ├── coverage/           # 标的 thesis 与 current.md 指针
 ├── reviews/            # daily / suggest / decision 归档
 ├── config/             # 投资原则、投资者配置
-├── data/               # SQLite DB（运行时生成）
-└── PROJECT_STATUS.md   # 当前架构与重构进展说明
+└── data/               # SQLite DB（运行时生成）
 ```
+
+---
+
+## Architecture summary
+
+Current structure in one line:
+- code and workflow live in Git
+- real portfolio state stays local
+- `skills/investment-agent/` is the main workflow layer
+- `app/tools/*.py` is the main automation surface
+- `python run.py ...` stays as a thin manual CLI
+
+If you want to understand how the project works, read in this order:
+1. `README.md`
+2. `skills/investment-agent/README.md`
+3. `skills/investment-agent/project-context.md`
+4. the workflow docs under `skills/investment-agent/workflows/`
 
 ---
 
