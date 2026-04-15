@@ -441,22 +441,17 @@ python run.py portfolio check
 
 ## Current status
 
-当前项目已经可以作为一个开源的个人投资工作流项目使用，但仍在持续整理：
-- workflow docs 已独立于 agent-specific command 系统
-- CLI 已收缩为更薄的人工入口
-- `.claude/` 适配层已删除
-- 剩余历史性文档和归档记录会继续逐步清理，但不影响当前主结构
-- LLM 集成保持为可配置 CLI 包装器，而不是绑定某个 Python SDK
+这个项目已经可以作为一个开源的个人投资工作流项目来体验和使用，但它仍然会继续演进。
 
-当前默认的 LLM CLI 配置是：
-- command: `claude`
-- args: `--print --tools '' --no-session-persistence`
+当前更重要的不是某个固定实现细节，而是这几件事：
+- workflow、tooling、archive 和 thesis 结构已经基本成型
+- 它适合拿来体验 Agent-assisted investing workflow 是怎么组织起来的
+- 你可以直接按自己的习惯修改原则、数据源、prompt 和 workflow 文档
 
-也可以通过环境变量覆盖：
+如果你对这类方向感兴趣，非常欢迎：
+- 直接体验
+- fork 成你自己的版本
+- 提 issue 提建议
+- 提交 PR 一起把这套 workflow 打磨得更清晰、更好用
 
-```bash
-export INVESTMENT_AGENT_LLM_CMD=claude
-export INVESTMENT_AGENT_LLM_ARGS="--print --tools '' --no-session-persistence"
-```
-
-注意：当前包装器本质上仍然是 CLI-driven 的，要求目标命令支持兼容的非交互调用模式。
+如果只能选一个，我最欢迎的是 fork 和贡献。
