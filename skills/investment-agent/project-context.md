@@ -113,6 +113,20 @@ Thesis 至少包含：
 - 记录普通投资结论
 - 替代 coverage thesis 或 review archive
 
+
+## LLM integration layer
+
+当前项目通过 `app/services/llm_client.py` 调用一个可配置的 LLM CLI。
+
+默认配置：
+- `INVESTMENT_AGENT_LLM_CMD=claude`
+- `INVESTMENT_AGENT_LLM_ARGS="--print --tools '' --no-session-persistence"`
+
+这意味着：
+- 当前默认体验仍然是 Claude CLI
+- 但架构上不再依赖某个特定 Python SDK
+- 若切换到其他命令，需要保证它支持兼容的非交互参数模式
+
 ## 什么时候优先用 tools，而不是 CLI
 
 优先用 tools：

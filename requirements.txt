@@ -1,4 +1,3 @@
-anthropic
 typer
 pydantic
 sqlmodel
