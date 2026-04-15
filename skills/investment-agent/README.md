@@ -13,8 +13,12 @@
    - 理解数据源、核心约束、目录结构、数据质量坑
 2. 再读对应 workflow
    - `workflows/daily-review.md`
+   - `workflows/pm-suggest.md`
    - `workflows/researcher-initiate.md`
    - `workflows/researcher-update.md`
+   - `workflows/researcher-analyze.md`
+   - `workflows/researcher-note.md`
+   - `workflows/researcher-status.md`
    - `workflows/risk-ic.md`
    - `workflows/trader-decide.md`
    - `workflows/trader-record.md`
@@ -36,11 +40,13 @@
 
 已迁移的 workflow：
 - Daily review
+- PM suggest
 - Researcher initiate / update
+- Researcher analyze / note / status
 - Risk IC sweep
 - Trader decide / record
 - Postmortem create / list / self-check
 
 后续可继续补：
-- PM suggest
-- Researcher analyze / note / status
+- PM snapshot / curve / cashflow
+- 其他研究辅助流程
