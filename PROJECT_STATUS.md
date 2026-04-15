@@ -30,7 +30,7 @@ This layer owns:
 - data access
 - market data integration
 - thesis loading
-- LLM wrapper logic
+- CLI-driven LLM wrapper logic
 
 ### 2. Tool layer
 - `app/tools/portfolio_tools.py`
@@ -97,7 +97,7 @@ investment-agent/
 - removed the `.claude/` adapter layer
 - removed the `daily` CLI orchestration command
 - neutralized active prompt/tool wording that depended on Claude Code
-- made the LLM command configurable through `INVESTMENT_AGENT_LLM_CMD`
+- made the LLM command configurable through `INVESTMENT_AGENT_LLM_CMD` and `INVESTMENT_AGENT_LLM_ARGS`
 - migrated postmortem workflows into `skills/investment-agent/workflows/`
 - migrated PM suggest and researcher analyze/note/status workflows into `skills/investment-agent/workflows/`
 
@@ -106,7 +106,7 @@ investment-agent/
 - coverage thesis files and version pointers
 - reviews archive
 - postmortem tool and DB-backed mistake memory
-- default `claude` backend command for LLM generation
+- default `claude` CLI profile for LLM generation
 
 ---
 
@@ -144,6 +144,7 @@ Recent refactor validation has included:
 Environment note:
 - runtime CLI smoke tests may depend on local Python environment packages such as `typer`
 - A-share workflows still depend on `.env` credentials for JQData
+- the LLM wrapper assumes a compatible CLI interface rather than a provider-specific Python SDK
 
 ---
 
