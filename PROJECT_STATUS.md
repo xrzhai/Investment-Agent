@@ -99,6 +99,7 @@ investment-agent/
 - neutralized active prompt/tool wording that depended on Claude Code
 - made the LLM command configurable through `INVESTMENT_AGENT_LLM_CMD`
 - migrated postmortem workflows into `skills/investment-agent/workflows/`
+- migrated PM suggest and researcher analyze/note/status workflows into `skills/investment-agent/workflows/`
 
 ### Intentionally preserved
 - deterministic Python portfolio logic
@@ -113,8 +114,12 @@ investment-agent/
 
 Implemented:
 - daily review
+- PM suggest
 - researcher initiate
 - researcher update
+- researcher analyze
+- researcher note
+- researcher status
 - risk IC sweep
 - trader decide
 - trader record
@@ -123,8 +128,7 @@ Implemented:
 - postmortem self-check
 
 Still good candidates for later migration / cleanup:
-- PM suggest
-- researcher analyze / note / status
+- PM snapshot / curve / cashflow
 - additional cleanup of historical references inside old archived outputs
 
 ---
