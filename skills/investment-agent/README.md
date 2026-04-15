@@ -4,7 +4,7 @@
 
 目标：
 - 让人和 AI agent 都能看懂项目怎么用
-- 把高阶流程从 `.claude/commands/` 抽离出来
+- 把高阶流程从 agent-specific command 目录中抽离出来
 - 让 agent 主要基于 `app/tools/*.py` 和 repo 内文件工作，而不是依赖某个专用 slash command 系统
 
 ## 建议使用顺序
