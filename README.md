@@ -141,6 +141,20 @@ investment-agent/
 
 ---
 
+## Privacy / local data
+
+This repository is designed to keep the code and workflow public while leaving real portfolio data local.
+
+By default, the following should remain local-only:
+- `data/` runtime database
+- `reviews/` daily / suggest / decision history
+- most real `coverage/{SYMBOL}/` thesis files
+- local benchmark or evaluation outputs
+
+The repository keeps workflow docs and templates, but your live portfolio state and research history should stay on your machine.
+
+---
+
 ## 当前 LLM CLI 配置
 
 当前默认配置是：
