@@ -441,7 +441,7 @@ python run.py portfolio check
 
 ## Current status
 
-这个项目已经可以作为一个开源的个人投资工作流项目来体验和使用，但它仍然会继续演进。
+这个项目已经可以作为一个公开可访问、默认非商用授权的个人投资工作流项目来体验和使用，但它仍然会继续演进。
 
 当前更重要的不是某个固定实现细节，而是这几件事：
 - workflow、tooling、archive 和 thesis 结构已经基本成型
