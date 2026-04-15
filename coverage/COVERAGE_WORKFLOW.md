@@ -125,7 +125,7 @@ v2_2026-03-17.md
 
 ### Skills → DB（持久化关键结论）
 
-当 skill 产出的分析结论不需要更新整个 thesis，但希望在 `daily run` 中被引用时，用 `journal research` 命令将关键结论写入数据库：
+当 skill 产出的分析结论不需要更新整个 thesis，但希望在后续 review workflow 中被引用时，用 `journal research` 命令将关键结论写入数据库：
 
 ```bash
 python run.py journal research --symbol NVDA --type earnings --content "Q4 FY2027 收入 $78B，超市场预期 5%；数据中心 QoQ +12%，Blackwell 需求确认；指引略低于预期，管理层归因供给约束而非需求放缓。"
