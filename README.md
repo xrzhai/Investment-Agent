@@ -455,3 +455,20 @@ python run.py portfolio check
 - 提交 PR 一起把这套 workflow 打磨得更清晰、更好用
 
 如果只能选一个，我最欢迎的是 fork 和贡献。
+
+## License
+
+这个仓库采用双协议、默认非商用的授权方式：
+
+- 软件 / 代码：`PolyForm Noncommercial 1.0.0`
+- 文档 / README / workflow / prompts / 模板等内容：`CC BY-NC 4.0`
+
+对应文件：
+- `LICENSE`：代码协议全文
+- `LICENSE-docs`：文档协议全文
+- `LICENSES.md`：本仓库的适用范围说明
+
+一句话理解：
+- 欢迎你出于学习、研究、个人使用、非商用协作来体验、fork、修改和贡献
+- 默认不授权商用
+- 如果某个子目录或文件有更具体的协议说明，则以更具体的说明为准
