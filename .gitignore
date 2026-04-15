@@ -1,8 +1,30 @@
 # Credentials & secrets
 .env
 
+# Local runtime state
+.hermes/
+.vscode/settings.json
+CLAUDE.md
+mine investment policy/
+
 # Database
-data/*.db
+data/**
+
+# Private portfolio runtime outputs
+reviews/**
+!reviews/
+!reviews/README.md
+!reviews/daily/
+!reviews/daily/.gitkeep
+
+# Private coverage / thesis state
+coverage/*/**
+coverage/COVERAGE_LOG.md
+!coverage/THESIS_TEMPLATE.md
+!coverage/COVERAGE_WORKFLOW.md
+
+# Private benchmark / evaluation material
+docs/benchmark_v2/**
 
 # Python
 __pycache__/
