@@ -1,19 +1,23 @@
 """
-LLM client — delegates to the `claude` CLI via subprocess.
-Requires Claude Code CLI to be installed and authenticated (Claude.ai subscription).
+LLM client — delegates to a configured CLI via subprocess.
+
+Default backend command: `claude`.
+Override with the `INVESTMENT_AGENT_LLM_CMD` environment variable.
+The configured command is expected to support the same non-interactive flags
+used below.
 """
 from __future__ import annotations
 
 import os
 import subprocess
 
-CLAUDE_BIN = "claude"
+LLM_CMD = os.environ.get("INVESTMENT_AGENT_LLM_CMD", "claude")
 
 
 def call_llm(prompt: str, system: str = "You are a disciplined investment copilot. Use plain text only. Do not use emoji or special Unicode symbols.") -> str:
-    """Send a prompt to Claude via the `claude` CLI and return the response text."""
+    """Send a prompt to the configured LLM CLI and return the response text."""
     cmd = [
-        CLAUDE_BIN,
+        LLM_CMD,
         "--print",
         "--tools", "",
         "--no-session-persistence",
@@ -21,8 +25,10 @@ def call_llm(prompt: str, system: str = "You are a disciplined investment copilo
         prompt,
     ]
 
-    # Remove CLAUDECODE so the subprocess is not treated as a nested session.
-    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+    env = dict(os.environ)
+    if LLM_CMD == "claude":
+        # Remove CLAUDECODE so a nested Hermes/Claude session is not treated as a nested Claude Code session.
+        env.pop("CLAUDECODE", None)
 
     try:
         result = subprocess.run(
@@ -35,18 +41,18 @@ def call_llm(prompt: str, system: str = "You are a disciplined investment copilo
         )
     except FileNotFoundError:
         raise RuntimeError(
-            "The `claude` CLI was not found. Ensure Claude Code is installed and in PATH."
+            f"The configured LLM CLI `{LLM_CMD}` was not found. Install it or set INVESTMENT_AGENT_LLM_CMD to a compatible command."
         ) from None
     except subprocess.TimeoutExpired:
         raise RuntimeError("LLM call timed out after 120 seconds.") from None
 
     if result.returncode != 0:
         raise RuntimeError(
-            f"`claude` exited with code {result.returncode}. stderr: {result.stderr.strip()[:400]}"
+            f"`{LLM_CMD}` exited with code {result.returncode}. stderr: {result.stderr.strip()[:400]}"
         )
 
     response = result.stdout.strip()
     if not response:
-        raise RuntimeError(f"`claude` returned an empty response. stderr: {result.stderr.strip()[:400]}")
+        raise RuntimeError(f"`{LLM_CMD}` returned an empty response. stderr: {result.stderr.strip()[:400]}")
 
     return response

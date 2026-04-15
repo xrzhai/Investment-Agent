@@ -1,5 +1,5 @@
 """
-P&L Tools — standalone executable script for Claude Code.
+P&L Tools — standalone executable script for agent workflows.
 
 Usage:
     python app/tools/pnl_tools.py --record [--notes TEXT]
@@ -114,7 +114,7 @@ def cmd_curve(days: int | None) -> None:
 
     if len(snapshots) < 2:
         print("[WARN] Not enough data to plot (need >= 2 snapshots).")
-        print("       Run /pm:daily or /pm:suggest to start accumulating data.")
+        print("       Record snapshots manually or run a review workflow to start accumulating data.")
         return
 
     # Filter by --days if specified

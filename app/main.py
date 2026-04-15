@@ -4,7 +4,7 @@ Usage: python app/main.py --help
 """
 import typer
 
-from app.cli import portfolio, profile, analyze, journal, daily
+from app.cli import portfolio, profile, analyze, journal
 
 app = typer.Typer(
     name="investment-agent",
@@ -16,7 +16,6 @@ app.add_typer(portfolio.app, name="portfolio")
 app.add_typer(profile.app, name="profile")
 app.add_typer(analyze.app, name="analyze")
 app.add_typer(journal.app, name="journal")
-app.add_typer(daily.app, name="daily")
 
 
 if __name__ == "__main__":

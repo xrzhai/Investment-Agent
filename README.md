@@ -65,14 +65,15 @@ python run.py analyze asset NVDA
 - coverage initiate / update
 - risk IC sweep
 - trader decision / record
-- postmortem / mistake memory
 
 入口文档：
 - `skills/investment-agent/README.md`
 - `skills/investment-agent/project-context.md`
 - `skills/investment-agent/workflows/*.md`
 
-当前仓库仍保留 `.claude/commands/` 作为历史实现参考；后续会逐步移除，迁移到更通用的 workflow docs。
+执行时优先调用：
+- `app/tools/*.py`
+- 必要时再使用薄 CLI `python run.py ...`
 
 ---
 
@@ -128,9 +129,23 @@ investment-agent/
 ├── coverage/           # 标的 thesis 与 current.md 指针
 ├── reviews/            # daily / suggest / decision 归档
 ├── config/             # 投资原则、投资者配置
-├── data/               # SQLite DB（运行时生成）
-└── .claude/            # 历史 Claude commands（迁移中，计划移除）
+└── data/               # SQLite DB（运行时生成）
 ```
+
+---
+
+## 当前默认 LLM backend
+
+当前默认命令是：
+- `claude`
+
+可以通过环境变量覆盖：
+
+```bash
+export INVESTMENT_AGENT_LLM_CMD=claude
+```
+
+注意：当前包装器仍然假设目标命令支持与 `claude` 类似的非交互参数接口。
 
 ---
 
@@ -151,6 +166,6 @@ investment-agent/
 ## 当前状态
 
 这个项目已经可以作为一个开源的个人投资工作流项目使用，但仍在持续整理：
-- 正在把 `.claude/commands/` 迁移成 agent-neutral 的 workflow docs
-- 正在把 CLI 收缩成更薄的人工入口
+- workflow docs 已开始独立于 agent-specific command 系统
+- CLI 正在收缩成更薄的人工入口
 - 不会扩展成前端 UI 或通用 Agent 平台

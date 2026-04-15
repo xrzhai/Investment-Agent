@@ -1,5 +1,5 @@
 """
-CN Market Data Tools — standalone executable for Claude Code workflows.
+CN Market Data Tools — standalone executable for agent workflows.
 
 Fetches A-share data via JQData (聚宽) and outputs JSON to stdout.
 Requires JQ_USER and JQ_PASS environment variables.

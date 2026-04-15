@@ -4,7 +4,7 @@ Use this template when asked to analyse a specific holding.
 
 ---
 
-## Instructions for Claude Code
+## Instructions for the agent
 
 When analysing a single asset, cover the following sections.
 Fetch news with `market_data.get_news_summary(symbol)` if useful.

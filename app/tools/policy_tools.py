@@ -1,5 +1,5 @@
 """
-Policy Tools — standalone executable script for Claude Code.
+Policy Tools — standalone executable script for agent workflows.
 
 Usage:
     python app/tools/policy_tools.py

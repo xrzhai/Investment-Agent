@@ -5,7 +5,7 @@ The data comes from `portfolio_tools.py`, `position_meta_tools.py`, and `policy_
 
 ---
 
-## Instructions for Claude Code
+## Instructions for the agent
 
 When conducting a daily review, present the following sections in order.
 Be concise and factual. Use the investor's profile to frame the analysis.
