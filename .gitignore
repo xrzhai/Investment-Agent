@@ -1,6 +1,5 @@
 # Credentials & secrets
 .env
-.claude/settings.local.json
 
 # Database
 data/*.db

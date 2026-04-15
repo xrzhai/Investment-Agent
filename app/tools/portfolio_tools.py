@@ -1,5 +1,5 @@
 """
-Portfolio Tools — standalone executable script for Claude Code.
+Portfolio Tools — standalone executable script for agent workflows.
 
 Usage:
     python app/tools/portfolio_tools.py
