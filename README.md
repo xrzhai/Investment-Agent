@@ -1,194 +1,156 @@
 # Investment Agent
 
-个人投资 Copilot，为长期持仓美股投资者设计。
+一个面向长期投资者的 thesis-driven portfolio workflow 项目。
 
-以 Claude Code 为主接口，CLI 为辅助。所有数值计算由 Python 确定性完成，LLM 仅负责解释、摘要与建议文字化。所有建议仅供参考，无自动执行。
+它不是券商，不是自动交易系统，也不是 Agent 框架。它做的事情很简单：
+- 用 Python 维护确定性的持仓、现金、PnL、权重与规则检查
+- 用 coverage thesis 文件维护每个标的的投资论点与失效条件
+- 用 reviews/ 归档日检、建议与决策记录
+- 让任意 AI agent 基于 workflow docs + tools 协助你完成研究与复盘
+
+## 项目定位
+
+这是一个 tool-first、workflow-driven 的小项目：
+- `app/tools/*.py` 是 agent 最适合调用的原子工具接口
+- `skills/investment-agent/` 是主要工作流文档
+- `python run.py ...` 是一个薄 CLI，方便人工录入、查看和调试
+
+非目标：
+- 不自动下单
+- 不提供前端 UI
+- 不封装成通用 Agent framework
 
 ---
 
-## 核心功能
+## 核心组成
 
-- **持仓管理** — 手动录入或 CSV 批量导入，yfinance 实时价格，PnL / 权重计算
-- **规则检查** — 集中度上限、禁止标的等 policy 自动检测
-- **Coverage 系统** — 为每支持仓维护三维度结构化投资论点（Fundamental / Valuation / Technical + IC + 头寸管理），版本历史保留
-- **Position Metadata** — 每支持仓的量化 metadata：Bear/Base/Bull 目标价、期望 CAGR、主题标签、风险等级、IC 状态
-- **组合建议** — 基于主题敞口聚类、CAGR 排序、thesis 头寸规则的可操作建议，自动存档
-- **P&L 曲线记录** — 自动记录资金曲线（USD）和时间加权收益率（TWR），支持入出金事件，终端 ASCII 折线图展示
-- **投资日志** — 建仓论点、操作记录、LLM 建议统一归档
+1. Deterministic portfolio state
+   - 持仓、现金、价格、PnL、权重、policy checks 都由 Python 计算
+2. Coverage thesis system
+   - 每个标的一份版本化 thesis，包含 Fundamental / Valuation / Technical、Invalidation Conditions、头寸管理原则
+3. Review archive
+   - `reviews/` 下保留 daily / suggest / decision 等记录，便于回看与复盘
+4. Tool scripts
+   - agent 可直接调用的工具脚本，优先输出结构化结果
+5. Thin CLI
+   - 适合人工做原子操作：导入、刷新、查看、检查
+
+---
+
+## 两种使用方式
+
+### 1) Manual mode：直接用薄 CLI
+
+适合：
+- 初始化项目
+- 手动录入持仓
+- 快速查看 summary / refresh / check
+- 做本地 smoke test
+
+常用命令：
+
+```bash
+python run.py portfolio import portfolio.csv
+python run.py portfolio summary
+python run.py portfolio refresh
+python run.py portfolio check
+python run.py analyze portfolio
+python run.py analyze asset NVDA
+```
+
+### 2) Agent-assisted mode：workflow docs + tools
+
+适合：
+- daily review
+- coverage initiate / update
+- risk IC sweep
+- trader decision / record
+- postmortem / mistake memory
+
+入口文档：
+- `skills/investment-agent/README.md`
+- `skills/investment-agent/project-context.md`
+- `skills/investment-agent/workflows/*.md`
+
+当前仓库仍保留 `.claude/commands/` 作为历史实现参考；后续会逐步移除，迁移到更通用的 workflow docs。
 
 ---
 
 ## 快速开始
 
+### 环境准备
+
 ```bash
-# 环境：conda work（Python 3.12）
-cd "g:/我的云端硬盘/03_Work/Projects/Investment-Agent"
+pip install -r requirements.txt
+cp .env.example .env
+```
 
-# 导入持仓（CSV 格式：symbol,quantity,avg_cost）
+如果使用 A 股数据，需要在 `.env` 中配置：
+- `JQ_USER`
+- `JQ_PASS`
+
+### 初始化与查看
+
+```bash
+# 导入持仓（CSV: symbol,quantity,avg_cost[,market]）
 python run.py portfolio import portfolio.csv
-
-# 初始化投资者配置
-python run.py profile init
-
-# 刷新价格 + 保存快照
-python run.py portfolio refresh
 
 # 查看持仓
 python run.py portfolio summary
 
-# 规则检查
+# 拉取最新价格
+python run.py portfolio refresh
+
+# 跑规则检查
 python run.py portfolio check
 ```
 
-在 Claude Code 中直接使用 slash commands（主要工作流）：
+---
+
+## 关键目录
 
 ```text
-# 组合管理
-/pm:daily         # 完整日检（持仓 + 规则 + 分析，自动打 P&L 快照）
-/pm:suggest       # 组合诊断 + 个股建议（自动存档至 reviews/，自动打 P&L 快照）
-/pm:snapshot      # 快速持仓快照（不刷新价格）
-/pm:curve         # 显示 P&L 曲线（资金曲线 + TWR 收益曲线）
-/pm:cashflow      # 记录入出金事件（影响 TWR 计算基准）
-
-# 风险管理
-/risk:check       # policy 规则检查
-/risk:ic          # Invalidation Conditions 扫描
-
-# Coverage 工作流（投资论点管理）
-/researcher:initiate NVDA   # 发起覆盖（新建 thesis）
-/researcher:update NVDA     # 更新覆盖（财报后 / 事件驱动）
-/researcher:analyze NVDA    # 单持仓深度分析
-/researcher:note NVDA       # 记录研究笔记
-/researcher:status          # 全组合覆盖状态一览
-
-# Mistake Memory（Agent 操作错误记忆）
-/postmortem:create          # 记录一条 Agent 操作错误（草稿）
-/postmortem:list            # 查看 + 管理所有错误记忆（draft/active/retired）
-/postmortem:check           # 自查：召回历史教训，逐条核查当前输出
-```
-
----
-
-## 持仓 CSV 格式
-
-```csv
-symbol,quantity,avg_cost
-NVDA,110,145.10
-META,28,700.32
-GOOGL,35,312.60
-```
-
-文件放在项目根目录，运行 `python run.py portfolio import portfolio.csv` 导入。
-
----
-
-## 项目结构
-
-```
 investment-agent/
-├── run.py                          # CLI 入口
+├── run.py
 ├── app/
-│   ├── cli/                        # CLI 命令层
-│   ├── engines/                    # 业务逻辑（deterministic，无 I/O）
-│   ├── services/                   # 外部集成（yfinance、Claude API）
-│   ├── repositories/               # SQLite CRUD
-│   ├── models/                     # Pydantic domain models + SQLModel 表
-│   ├── prompts/                    # LLM prompt 模板
-│   └── tools/                      # Claude Code 调用脚本（JSON 输出）
-│       ├── portfolio_tools.py      # 持仓状态 + 实时价格
-│       ├── policy_tools.py         # policy 规则检查
-│       ├── position_meta_tools.py  # position metadata 读/写
-│       ├── pnl_tools.py            # P&L 曲线记录（--record / --cashflow / --curve）
-│       └── postmortem_tools.py     # Agent 错误记忆（--create / --approve / --recall / --list）
-├── coverage/                       # 投资论点（每支股票一个子目录）
-│   ├── COVERAGE_LOG.md             # 10 个标的覆盖状态一览
-│   ├── COVERAGE_WORKFLOW.md        # 核心工作流规范
-│   ├── THESIS_TEMPLATE.md          # 三维度论点模板
-│   └── {SYMBOL}/
-│       ├── vN_YYYY-MM-DD.md        # 历史版本（不覆盖，递增保留）
-│       └── current.md              # 一行指针，指向当前生效版本
-├── reviews/                        # 组合级分析存档（与 coverage 平行）
-│   ├── REVIEWS_LOG.md              # 所有运行记录索引
-│   ├── suggest/                    # /pm:suggest 输出存档
-│   │   └── YYYY-MM-DD_suggest.md
-│   └── daily/                      # /pm:daily 输出（预留）
-├── config/
-│   ├── profile.json                # 投资者配置（风格/风险容忍/仓位上限）
-│   └── principles.md               # 投资原则（选股/开仓/组合/调仓/离场/风控/复盘）
-├── data/
-│   └── investment.db               # SQLite 数据库（自动创建）
-└── .claude/
-    └── commands/                   # slash commands（pm / researcher / risk）
+│   ├── cli/            # 薄 CLI，面向人工原子操作
+│   ├── engines/        # 业务逻辑（确定性计算）
+│   ├── services/       # 市场数据、LLM、coverage 等服务
+│   ├── repositories/   # SQLite CRUD
+│   ├── models/         # Domain models / DB models
+│   ├── prompts/        # Prompt 模板
+│   └── tools/          # Agent 可直接调用的工具脚本
+├── skills/
+│   └── investment-agent/
+│       ├── README.md
+│       ├── project-context.md
+│       └── workflows/
+├── coverage/           # 标的 thesis 与 current.md 指针
+├── reviews/            # daily / suggest / decision 归档
+├── config/             # 投资原则、投资者配置
+├── data/               # SQLite DB（运行时生成）
+└── .claude/            # 历史 Claude commands（迁移中，计划移除）
 ```
 
 ---
 
-## Coverage 系统
+## 数据与分析原则
 
-为每支持仓维护机构式投资论点，三维度结构：
+- 确定性优先：PnL / 权重 / policy checks / CAGR 由 Python 计算，不让 LLM 做算术
+- 成本价不入决策：`avg_cost` 只用于展示，不进入建议逻辑
+- Thesis 优先：Invalidation Conditions 是首要约束，触发时不能找借口
+- 数据质量优先：yfinance 的 `eps_forward` 存在年份错位，写入 thesis 前必须交叉验证
+- Agent 只做解释与流程协助，不做自动执行
 
-```markdown
-## Fundamental — 大方向
-当前状态 / 支撑因子 / Base Scenario / Adverse Scenario / 监控指标
-
-## Valuation — Risk/Return 评估
-估值框架 / 多年 EPS 与 P/E 表 / Bear-Base-Bull 场景 / 胜率 / 估值锚点
-
-## Technical — 资金流与市场结构
-市场叙事 / 价格行为 / 分析师动态 / 资金流触发器
-
-## 首要约束（Invalidation Conditions）
-具体可观测、有时间边界的失效条件
-
-## 头寸管理原则
-目标权重 / 加仓条件 / 减仓条件 / 退出条件 / Time Horizon
-```
-
-**数据质量规范（强制）：**
-
-- yfinance `eps_forward` 存在系统性年份偏移（返回 FY+2，非 FY+1），必须通过 StockAnalysis 交叉验证
-- ADR（TSM 等）的 ps_ratio / ev_ebitda 因货币混用不可用，须手动计算
-- 成本价（avg_cost）不入任何决策逻辑，仅用于 PnL 展示
+更多约束见：
+- `skills/investment-agent/project-context.md`
+- `coverage/THESIS_TEMPLATE.md`
 
 ---
 
-## Position Metadata
+## 当前状态
 
-每支持仓在 SQLite 中存储量化 metadata，供 `/pm:suggest` 读取：
-
-```bash
-# 读取所有标的 metadata
-python app/tools/position_meta_tools.py read
-
-# 写入 metadata（/researcher:update Step 5 调用）
-python app/tools/position_meta_tools.py write NVDA \
-  --target-bear 98 --target-base 198 --target-bull 308 \
-  --prob-bear 0.15 --prob-base 0.40 --prob-bull 0.45 \
-  --horizon-months 18 \
-  --sector Technology --region US --cap-style mega \
-  --growth-value growth \
-  --risk-level high --ic-status CLEAR
-```
-
-期望 CAGR 由工具自动计算：`Σ prob_i × (target_i / current_price)^(12/horizon) - 1`
-
----
-
-## 设计原则
-
-| 原则 | 说明 |
-|------|------|
-| 确定性优先 | PnL / 权重 / 规则检查全部用 Python 计算，不靠 LLM |
-| LLM 只做解释 | 语言生成、摘要、建议文字化才调用 Claude API |
-| 人类决策 | 所有建议仅供参考，无自动执行 |
-| 成本价不入 LLM | avg_cost 不传给 LLM prompt，避免沉没成本影响决策建议 |
-| Thesis 硬性前提 | 所有持仓必须有完整 thesis 才允许加仓 |
-| MVP 克制 | 美股 + ETF 先行，不做期权，不做自动交易 |
-
----
-
-## 进度
-
-详见 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
-
-**当前状态（2026-03-25）：** Phase 1–5f 全部完成。13 个标的均有 Coverage thesis + Position metadata。`/pm:suggest` 可正常运行并存档。P&L 曲线记录功能上线，以 $98,430 为基准点开始追踪。Mistake Memory 模块上线，支持 Agent 操作错误的结构化记录与自查。
+这个项目已经可以作为一个开源的个人投资工作流项目使用，但仍在持续整理：
+- 正在把 `.claude/commands/` 迁移成 agent-neutral 的 workflow docs
+- 正在把 CLI 收缩成更薄的人工入口
+- 不会扩展成前端 UI 或通用 Agent 平台
