@@ -141,18 +141,20 @@ investment-agent/
 
 ---
 
-## 当前默认 LLM backend
+## 当前 LLM CLI 配置
 
-当前默认命令是：
-- `claude`
+当前默认配置是：
+- command: `claude`
+- args: `--print --tools '' --no-session-persistence`
 
 可以通过环境变量覆盖：
 
 ```bash
 export INVESTMENT_AGENT_LLM_CMD=claude
+export INVESTMENT_AGENT_LLM_ARGS="--print --tools '' --no-session-persistence"
 ```
 
-注意：当前包装器仍然假设目标命令支持与 `claude` 类似的非交互参数接口。
+注意：当前包装器本质上是 CLI-driven 的，要求目标命令支持兼容的非交互调用模式。
 
 ---
 
@@ -177,3 +179,4 @@ export INVESTMENT_AGENT_LLM_CMD=claude
 - CLI 已收缩为更薄的人工入口
 - `.claude/` 适配层已删除
 - 剩余历史性文档和归档记录会继续逐步清理，但不影响当前主结构
+- LLM 集成保持为可配置 CLI 包装器，而不是绑定某个 Python SDK
