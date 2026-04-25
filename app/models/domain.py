@@ -19,6 +19,21 @@ class AssetType(str, Enum):
     stock = "stock"
     etf = "etf"
     cash = "cash"
+    option = "option"
+    other = "other"
+
+
+class OptionContractStatus(str, Enum):
+    open = "open"
+    expired = "expired"
+    assigned = "assigned"
+    closed = "closed"
+
+
+class OptionIntent(str, Enum):
+    income = "income"
+    lower_price_entry = "lower_price_entry"
+    staged_build = "staged_build"
     other = "other"
 
 
@@ -38,6 +53,8 @@ class TriggerType(str, Enum):
     price_move = "price_move"
     event = "event"
     thesis_drift = "thesis_drift"
+    liquidity = "liquidity"
+    contingent_exposure = "contingent_exposure"
 
 
 # ---------------------------------------------------------------------------
@@ -73,6 +90,34 @@ class Position(BaseModel):
     base_market_value: float = 0.0    # market_value converted to base currency (USD)
     fx_stale: bool = False            # True if FX rate is from a prior day
     price_source: str = "yfinance"    # "yfinance" | "jqdata" | "cached"
+
+
+class SoldPutContract(BaseModel):
+    contract_id: Optional[int] = None
+    underlying_symbol: str
+    option_type: str = "put"
+    side: str = "short"
+    contracts: int = 1
+    shares_per_contract: int = 100
+    strike: float
+    expiry_date: date
+    opened_date: Optional[date] = None
+    premium_per_share: float = 0.0
+    premium_total: float = 0.0
+    fees: float = 0.0
+    currency: str = "USD"
+    market: str = "US"
+    status: OptionContractStatus = OptionContractStatus.open
+    reserved_cash: float = 0.0
+    net_cash_obligation: float = 0.0
+    effective_entry_if_assigned: float = 0.0
+    intent: OptionIntent = OptionIntent.lower_price_entry
+    notes: str = ""
+    linked_decision_file: str = ""
+    closed_date: Optional[date] = None
+    assigned_date: Optional[date] = None
+    assignment_price: Optional[float] = None
+    realized_premium: Optional[float] = None
 
 
 class PortfolioSnapshot(BaseModel):

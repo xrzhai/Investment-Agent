@@ -103,15 +103,29 @@ python run.py portfolio add AAPL 10 --cost 150
 python run.py portfolio add 600519.SH 100 --cost 1680 --market CN_A
 ```
 
+如果是记录实际成交，优先用：
+
+```bash
+python run.py portfolio trade NFLX buy 20 --price 97.83 --fees 6.40
+python run.py portfolio trade NFLX sell 10 --price 120
+```
+
+其中：
+- `portfolio add` = 直接覆盖到某个目标仓位快照
+- `portfolio trade` = 按成交增量更新持仓和均价
+
 ### 3) Inspect current state
 
 ```bash
 python run.py portfolio summary
 python run.py portfolio refresh
 python run.py portfolio check
+python run.py options summary
 ```
 
 做到这里，你已经把这套系统最底层的 deterministic portfolio state 跑起来了。
+
+如果你会卖美股 short cash-secured puts，也可以把它们作为“组合内的 contingent exposure”纳入系统管理，而不是等到被行权后再事后手写解释。
 
 下一步通常是二选一：
 - 如果你只是先试用：继续看 `summary / refresh / check`
@@ -136,7 +150,16 @@ python run.py portfolio import portfolio.csv
 python run.py portfolio summary
 python run.py portfolio refresh
 python run.py portfolio check
+python run.py options list
+python run.py options summary
 ```
+
+对于美股 short put，当前项目的最小支持范围是：
+- 记录 open sold puts（short cash-secured puts）
+- 计算 reserved cash / premium / effective entry if assigned
+- 在 portfolio / policy 输出里显示 options exposure
+- 支持 `assigned / expired / closed` 状态更新
+- 若需要，在 assignment 时把净成本真正落到 spot + cash
 
 ### 2. Build or update coverage
 

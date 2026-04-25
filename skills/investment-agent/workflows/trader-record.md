@@ -9,6 +9,7 @@
 - `python app/tools/portfolio_tools.py`
 - `python app/tools/portfolio_tools.py --refresh`
 - `python app/tools/pnl_tools.py --record --notes ...`
+- `python run.py portfolio trade ...`
 - `python run.py portfolio add ...`
 - `python run.py portfolio remove ...`
 
@@ -36,7 +37,7 @@
 - 将状态从“待执行”改为“已执行”
 - 把执行记录表中的“实际”列填完整
 
-### 4. 获取当前持仓并计算新持仓总量
+### 4. 获取当前持仓并确认成交口径
 
 先读取当前组合状态：
 
@@ -44,26 +45,34 @@
 python app/tools/portfolio_tools.py
 ```
 
-再根据方向计算：
-- 加仓 / 建仓：`CURRENT_QTY + EXEC_QTY`
-- 减仓：`CURRENT_QTY - EXEC_QTY`
-- 清仓：`0`
+确认：
+- `EXEC_QTY`
+- `EXEC_PRICE`
+- `FEES`
+- `NEW_AVG_COST`（若为买入）
+- `NEW_FUND_BALANCE`
 
 ### 5. 更新 DB
 
-若不是清仓：
+对标的本身，优先记录成交，而不是手工覆盖新总仓位：
+
+```bash
+python run.py portfolio trade {SYMBOL} buy {EXEC_QTY} --price {EXEC_PRICE} --fees {FEES}
+```
+
+或：
+
+```bash
+python run.py portfolio trade {SYMBOL} sell {EXEC_QTY} --price {EXEC_PRICE}
+```
+
+只有在你明确要“直接覆盖到某个绝对仓位快照”时，才使用：
 
 ```bash
 python run.py portfolio add {SYMBOL} {NEW_TOTAL_QTY} --cost {NEW_AVG_COST}
 ```
 
-若为清仓：
-
-```bash
-python run.py portfolio remove {SYMBOL}
-```
-
-然后更新现金来源持仓：
+然后再更新现金来源持仓：
 
 ```bash
 python run.py portfolio add {FUND_SOURCE} {NEW_FUND_BALANCE} --cost {FX_RATE}
@@ -82,6 +91,8 @@ python app/tools/pnl_tools.py --record --notes "trade: {SYMBOL} {DIRECTION} {EXE
 
 ## Notes
 
-- `portfolio add` 在这里应视为 upsert / set 语义
+- `portfolio trade` 是记录成交的首选接口，避免手工重算总股数
+- `portfolio add` 只应视为 upsert / set 语义，用于导入或直接修正某个绝对仓位快照
 - 现金余额以用户确认值为准，不在 workflow 里擅自猜手续费
+- 对卖 put 收到的权利金，默认视为组合内部现金流：直接更新 `CASH_USD`，不要记成外部 `cashflow_events`
 - 交易执行记录要以实际成交为准，而不是 decision 中的参考价

@@ -20,10 +20,12 @@
    - `workflows/researcher-note.md`
    - `workflows/researcher-status.md`
    - `workflows/risk-ic.md`
-   - `workflows/trader-decide.md`
-   - `workflows/trader-record.md`
-   - `workflows/postmortem-create.md`
-   - `workflows/postmortem-list.md`
+  - `workflows/trader-decide.md`
+  - `workflows/trader-record.md`
+  - `workflows/options-record.md`
+  - `workflows/options-review.md`
+  - `workflows/postmortem-create.md`
+- `workflows/postmortem-list.md`
    - `workflows/postmortem-check.md`
 3. 执行时优先调用：
    - `app/tools/*.py`
@@ -45,6 +47,7 @@
 - Researcher analyze / note / status
 - Risk IC sweep
 - Trader decide / record
+- Options record / review（美股 short cash-secured puts）
 - Postmortem create / list / self-check
 
 后续可继续补：

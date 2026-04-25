@@ -108,13 +108,45 @@ class PositionRow(SQLModel, table=True):
 
     # --- Risk ---
     risk_level: Optional[str] = Field(default=None)     # "low" / "medium" / "high"
-    ic_status: Optional[str] = Field(default=None)      # "CLEAR" / "WATCHING" / "TRIGGERED"
+    ic_status: Optional[str] = Field(default=None)      # "CLEAR" / "WATCHING" | "TRIGGERED"
     meta_updated_at: Optional[datetime] = Field(default=None)
 
     # --- Market / currency (A-share support) ---
     market: str = Field(default="US")                   # "US" | "CN_A"
     currency: str = Field(default="USD")                # "USD" | "CNY"
     exchange: Optional[str] = Field(default=None)       # "NASDAQ" | "NYSE" | "SSE" | "SZSE" | "BSE"
+
+
+class OptionContractRow(SQLModel, table=True):
+    __tablename__ = "option_contracts"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    underlying_symbol: str = Field(index=True)
+    option_type: str = Field(default="put")
+    side: str = Field(default="short")
+    contracts: int = Field(default=1)
+    shares_per_contract: int = Field(default=100)
+    strike: float
+    expiry_date: date = Field(index=True)
+    opened_date: Optional[date] = Field(default=None)
+    premium_per_share: float = 0.0
+    premium_total: float = 0.0
+    fees: float = 0.0
+    currency: str = Field(default="USD")
+    market: str = Field(default="US")
+    status: str = Field(default="open", index=True)
+    reserved_cash: float = 0.0
+    net_cash_obligation: float = 0.0
+    effective_entry_if_assigned: float = 0.0
+    intent: str = Field(default="lower_price_entry")
+    notes: str = ""
+    linked_decision_file: str = ""
+    closed_date: Optional[date] = Field(default=None)
+    assigned_date: Optional[date] = Field(default=None)
+    assignment_price: Optional[float] = Field(default=None)
+    realized_premium: Optional[float] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
 
 
 class SnapshotRow(SQLModel, table=True):
