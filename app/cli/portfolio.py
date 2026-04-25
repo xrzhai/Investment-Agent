@@ -46,12 +46,67 @@ def add_position(
     # Auto-detect market from symbol suffix if not overridden
     if market == "US" and is_cn_a_symbol(symbol):
         market = "CN_A"
+    symbol = symbol.upper()
     _validate_symbol_market(symbol, market)
-    portfolio_repo.upsert_position(symbol.upper(), quantity, cost, market=market)
+    existing = portfolio_repo.get_position(symbol)
+    portfolio_repo.upsert_position(symbol, quantity, cost, market=market)
     currency = "CNY" if market == "CN_A" else "USD"
     console.print(
-        f"[green]OK[/green] Position saved: {symbol.upper()}  market={market}  "
+        f"[green]OK[/green] Position saved: {symbol}  market={market}  "
         f"currency={currency}  qty={quantity}  avg_cost={cost}"
+    )
+    if existing:
+        console.print(
+            "[yellow]Note:[/yellow] `portfolio add` uses set/upsert semantics. "
+            "For incremental buys or sells, use `portfolio trade`."
+        )
+
+
+@app.command("trade")
+def trade_position(
+    symbol: str = typer.Argument(..., help="Ticker symbol, e.g. NFLX or 600519.SH"),
+    side: str = typer.Argument(..., help="Trade side: buy or sell"),
+    quantity: float = typer.Argument(..., help="Executed quantity"),
+    price: float = typer.Option(..., "--price", "-p", help="Executed price per share (local currency)"),
+    fees: float = typer.Option(0.0, "--fees", "-f", help="Total fees/taxes for this trade (local currency)"),
+    market: str = typer.Option("US", "--market", "-m", help="Market: US or CN_A"),
+):
+    """Apply an incremental trade without manually recomputing total quantity."""
+    init_db()
+    market = market.upper()
+    if market == "US" and is_cn_a_symbol(symbol):
+        market = "CN_A"
+    symbol = symbol.upper()
+    side = side.lower()
+    _validate_symbol_market(symbol, market)
+
+    try:
+        row, details = portfolio_repo.apply_trade(
+            symbol=symbol,
+            side=side,
+            quantity=quantity,
+            price=price,
+            fees=fees,
+            market=market,
+        )
+    except ValueError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+    currency = "CNY" if market == "CN_A" else "USD"
+    if details["closed"]:
+        console.print(
+            f"[green]OK[/green] Trade recorded: {symbol} {side} {quantity} @ {price} {currency}  "
+            f"(fees={fees})  position closed"
+        )
+        return
+
+    console.print(
+        f"[green]OK[/green] Trade recorded: {symbol} {side} {quantity} @ {price} {currency}  "
+        f"(fees={fees})"
+    )
+    console.print(
+        f"New position: qty={details['new_qty']:.4f}  avg_cost={details['new_avg_cost']:.4f} {currency}"
     )
 
 

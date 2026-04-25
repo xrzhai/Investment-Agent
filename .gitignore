@@ -4,8 +4,10 @@
 # Local runtime state
 .hermes/
 .vscode/settings.json
+.claude/
 CLAUDE.md
 mine investment policy/
+portfolio.db
 
 # Database
 data/**
