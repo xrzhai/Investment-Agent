@@ -56,6 +56,125 @@ def upsert_position(
         return row
 
 
+def get_position(symbol: str) -> Optional[PositionRow]:
+    with get_session() as session:
+        return session.exec(select(PositionRow).where(PositionRow.symbol == symbol)).first()
+
+
+def apply_trade(
+    symbol: str,
+    side: str,
+    quantity: float,
+    price: float,
+    fees: float = 0.0,
+    market: str = "US",
+    currency: str | None = None,
+    exchange: str | None = None,
+) -> tuple[Optional[PositionRow], dict]:
+    """
+    Apply an incremental trade to an existing position.
+
+    BUY:
+      - increases quantity
+      - recalculates weighted average cost, including fees
+
+    SELL:
+      - decreases quantity
+      - keeps average cost unchanged for the remaining position
+      - deletes the row if fully exited
+    """
+    side = side.lower()
+    if side not in {"buy", "sell"}:
+        raise ValueError(f"Unsupported trade side: {side}")
+    if quantity <= 0:
+        raise ValueError("Trade quantity must be positive.")
+    if price <= 0:
+        raise ValueError("Trade price must be positive.")
+    if fees < 0:
+        raise ValueError("Fees cannot be negative.")
+
+    if currency is None:
+        currency = "CNY" if market == "CN_A" else "USD"
+
+    with get_session() as session:
+        row = session.exec(select(PositionRow).where(PositionRow.symbol == symbol)).first()
+
+        if side == "buy":
+            trade_total = quantity * price + fees
+            if row:
+                old_total_cost = row.quantity * row.avg_cost
+                new_quantity = row.quantity + quantity
+                row.avg_cost = (old_total_cost + trade_total) / new_quantity
+                row.quantity = new_quantity
+                row.market = market
+                row.currency = currency
+                if exchange is not None:
+                    row.exchange = exchange
+                row.updated_at = datetime.now()
+            else:
+                row = PositionRow(
+                    symbol=symbol,
+                    quantity=quantity,
+                    avg_cost=trade_total / quantity,
+                    market=market,
+                    currency=currency,
+                    exchange=exchange,
+                )
+                session.add(row)
+            session.commit()
+            session.refresh(row)
+            return row, {
+                "side": side,
+                "trade_qty": quantity,
+                "trade_price": price,
+                "fees": fees,
+                "new_qty": row.quantity,
+                "new_avg_cost": row.avg_cost,
+                "closed": False,
+            }
+
+        if not row:
+            raise ValueError(f"Cannot sell {symbol}: no existing position found.")
+        if quantity > row.quantity:
+            raise ValueError(
+                f"Cannot sell {quantity} shares of {symbol}: only {row.quantity} available."
+            )
+
+        remaining_qty = row.quantity - quantity
+        avg_cost = row.avg_cost
+        closed = remaining_qty == 0
+        if closed:
+            session.delete(row)
+            session.commit()
+            return None, {
+                "side": side,
+                "trade_qty": quantity,
+                "trade_price": price,
+                "fees": fees,
+                "new_qty": 0.0,
+                "new_avg_cost": avg_cost,
+                "closed": True,
+            }
+
+        row.quantity = remaining_qty
+        row.market = market
+        row.currency = currency
+        if exchange is not None:
+            row.exchange = exchange
+        row.updated_at = datetime.now()
+        session.commit()
+        session.refresh(row)
+        return row, {
+            "side": side,
+            "trade_qty": quantity,
+            "trade_price": price,
+            "fees": fees,
+            "new_qty": row.quantity,
+            "new_avg_cost": row.avg_cost,
+            "closed": False,
+        }
+
+
 def update_price(symbol: str, price: float) -> Optional[PositionRow]:
     with get_session() as session:
         row = session.exec(select(PositionRow).where(PositionRow.symbol == symbol)).first()
