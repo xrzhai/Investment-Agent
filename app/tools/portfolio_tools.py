@@ -20,6 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from app.engines.portfolio_engine import compute_positions
+from app.repositories.options_repo import compute_open_put_exposure, list_option_contracts
 from app.repositories.portfolio_repo import list_positions, update_price
 from app.services.market_data import get_batch_prices, get_fx_rate
 from app.services.profile_service import load_profile
@@ -77,6 +78,16 @@ def get_portfolio_state(refresh_prices: bool = False) -> dict:
             "stale": cn_pos.fx_stale if cn_pos else False,
         }
 
+    open_option_rows = list_option_contracts(status="open")
+    options_exposure = None
+    if open_option_rows:
+        options_exposure = compute_open_put_exposure(
+            spot_positions=positions,
+            option_rows=open_option_rows,
+            total_portfolio_value_usd=round(total_usd, 2),
+            fetch_spot_prices=True,
+        )
+
     return {
         "timestamp": datetime.now().isoformat(),
         "base_currency": "USD",
@@ -87,6 +98,7 @@ def get_portfolio_state(refresh_prices: bool = False) -> dict:
         "total_unrealized_pnl_pct": round(total_pnl_pct, 2),
         "position_count": len(positions),
         "fx": fx_info,
+        "options_exposure": options_exposure,
         "investor_profile": {
             "style": profile.style,
             "risk_tolerance": profile.risk_tolerance,
