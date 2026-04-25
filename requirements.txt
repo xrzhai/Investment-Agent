@@ -5,3 +5,4 @@ yfinance
 rich
 jqdatasdk
 plotext
+pytest
