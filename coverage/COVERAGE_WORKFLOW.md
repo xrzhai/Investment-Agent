@@ -70,22 +70,22 @@ v2_2026-03-17.md
 **流程：**
 1. 可选：运行 `/equity-research:earnings {SYMBOL}` 获取最新数据参考
 2. 复制 `current.md` 指向的当前版本，在此基础上修改
-3. 保存为新版本 `vN_YYYY-MM-DD.md`（不覆盖旧版）
-4. 更新 `current.md` 指针
-5. 在 thesis 文件末尾的「覆盖历史」表格中记录更新摘要
-6. 更新 `COVERAGE_LOG.md`
+3. 保存为新版本 `vN_YYYY-MM-DD.md`
+4. 更新 `current.md`
+5. 更新「覆盖历史」
+6. 图表默认输出到 `coverage/{SYMBOL}/assets/current/`；重要版本再归档到 `assets/archive/YYYY-MM-DD/`
+7. 更新 `COVERAGE_LOG.md`
 
 ---
 
 ## Thesis 撰写 Checklist
 
-按熊猫笔记的四个核心问题自检：
-
-- [ ] 目前的状态是什么？（Fundamental 当前状态是否写清楚？）
-- [ ] 各个维度的因子如何影响了这个状态？（三维度分析是否都覆盖到？）
-- [ ] Base Scenario 和最可能的 Adverse Scenario 是什么？（是否写具体，而非泛泛而谈？）
-- [ ] 什么数据变化会证明我错了？（Invalidation Conditions 是否足够具体，没有留台阶？）
-- [ ] 头寸管理原则是否在开仓前就确立？（目标权重、加减仓条件、Time Horizon 是否写明？）
+- [ ] 当前状态写清楚
+- [ ] Base / Adverse 写具体
+- [ ] IC 足够具体
+- [ ] 头寸原则已写明
+- [ ] 财报更新时有多年 + 多季趋势表
+- [ ] 图表 / sparkline 只保留必要项，不堆砌
 
 ---
 
