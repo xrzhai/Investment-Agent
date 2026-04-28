@@ -62,6 +62,21 @@ python app/tools/policy_tools.py
 
 Policy 违规是硬约束，优先级高于其他建议。
 
+如果组合里有 open sold puts，不要只看 `reserved_cash` 或 fully-assigned weight 这类静态数值；至少还要一起判断：
+- `strike_gap`
+- `moneyness`
+- `days_to_expiry`
+- 若现在平仓，大约要花多少钱
+
+特别是像远 OTM、离到期仍有一段时间、且平仓成本已经很低的 put：
+- 应更多视为“可选择提前回收的小尾部风险”
+- 而不是直接表述成“当前有很大行权风险”
+
+换句话说，agent 在解释层要区分：
+1. contingent exposure 仍然存在
+2. 但短期 assignment probability 可能已经明显下降
+3. 是否提前平仓，取决于用户是否愿意用一小笔成本买确定性和流动性释放
+
 ### 4. 读取投资原则
 
 读取：
