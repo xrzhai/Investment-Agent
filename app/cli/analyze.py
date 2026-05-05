@@ -15,8 +15,8 @@ def analyze_portfolio():
     """Explain today's portfolio state using LLM."""
     init_db()
     from app.engines.recommendation_engine import explain_portfolio
+    from app.engines.portfolio_engine import compute_positions
     from app.repositories.portfolio_repo import list_positions
-    from app.cli.portfolio import _rows_to_positions
     from app.services.profile_service import load_profile
 
     rows = list_positions()
@@ -24,7 +24,7 @@ def analyze_portfolio():
         console.print("[yellow]No positions.[/yellow]")
         return
 
-    positions = _rows_to_positions(rows)
+    positions = compute_positions(rows)
     profile = load_profile()
     explanation = explain_portfolio(positions, profile)
     console.rule("Portfolio Analysis")
@@ -47,8 +47,8 @@ def suggest():
     """Generate action suggestions based on current portfolio state and policy."""
     init_db()
     from app.engines.recommendation_engine import generate_suggestions
+    from app.engines.portfolio_engine import compute_positions
     from app.repositories.portfolio_repo import list_positions
-    from app.cli.portfolio import _rows_to_positions
     from app.services.profile_service import load_profile
 
     rows = list_positions()
@@ -56,7 +56,7 @@ def suggest():
         console.print("[yellow]No positions.[/yellow]")
         return
 
-    positions = _rows_to_positions(rows)
+    positions = compute_positions(rows)
     profile = load_profile()
 
     from app.models.domain import Recommendation
