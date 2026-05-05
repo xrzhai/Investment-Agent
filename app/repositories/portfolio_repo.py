@@ -261,7 +261,15 @@ def list_snapshots_asc() -> list[SnapshotRow]:
         ).all()
 
 
-def upsert_pnl_snapshot(total_value_usd: float, notes: str = "") -> SnapshotRow:
+def upsert_pnl_snapshot(
+    total_value_usd: float,
+    notes: str = "",
+    cash: float = 0.0,
+    daily_return_pct: float = 0.0,
+    max_drawdown_pct: float = 0.0,
+    top_position_weight: float = 0.0,
+    positions_json: str = "{}",
+) -> SnapshotRow:
     """
     Insert or update today's snapshot for P&L curve tracking.
     If a row for today already exists, update its total_value and notes.
@@ -273,11 +281,21 @@ def upsert_pnl_snapshot(total_value_usd: float, notes: str = "") -> SnapshotRow:
         ).first()
         if row:
             row.total_value = total_value_usd
+            row.cash = cash
+            row.daily_return_pct = daily_return_pct
+            row.max_drawdown_pct = max_drawdown_pct
+            row.top_position_weight = top_position_weight
+            row.positions_json = positions_json
             row.notes = notes
         else:
             row = SnapshotRow(
                 snapshot_date=today,
                 total_value=total_value_usd,
+                cash=cash,
+                daily_return_pct=daily_return_pct,
+                max_drawdown_pct=max_drawdown_pct,
+                top_position_weight=top_position_weight,
+                positions_json=positions_json,
                 notes=notes,
             )
             session.add(row)

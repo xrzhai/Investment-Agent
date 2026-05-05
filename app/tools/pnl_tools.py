@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import sys
 from datetime import date, timedelta
 from pathlib import Path
@@ -40,11 +41,85 @@ from app.tools.portfolio_tools import get_portfolio_state
 # Core helpers
 # ---------------------------------------------------------------------------
 
+def _as_date(value) -> date:
+    if isinstance(value, date):
+        return value
+    return date.fromisoformat(str(value)[:10])
+
+
+def _cash_value_from_positions(positions: list[dict]) -> float:
+    return round(
+        sum(
+            float(p.get("base_market_value_usd") or 0.0)
+            for p in positions
+            if str(p.get("symbol", "")).startswith("CASH")
+        ),
+        2,
+    )
+
+
+def _top_position_weight(positions: list[dict]) -> float:
+    if not positions:
+        return 0.0
+    return round(max(float(p.get("weight_pct") or 0.0) for p in positions), 2)
+
+
+def _daily_return_pct(total_value: float, snapshot_date: date, snapshots, cashflows) -> float:
+    previous = None
+    for snap in snapshots:
+        if _as_date(snap.snapshot_date) < snapshot_date:
+            previous = snap
+    if previous is None or not previous.total_value:
+        return 0.0
+
+    prev_date = _as_date(previous.snapshot_date)
+    cashflow_total = sum(
+        float(c.amount_usd)
+        for c in cashflows
+        if prev_date < _as_date(c.event_date) <= snapshot_date
+    )
+    return round(((total_value - cashflow_total) / float(previous.total_value) - 1) * 100, 2)
+
+
+def _max_drawdown_pct(total_value: float, snapshot_date: date, snapshots) -> float:
+    values = [
+        float(s.total_value)
+        for s in snapshots
+        if _as_date(s.snapshot_date) < snapshot_date and float(s.total_value) > 0
+    ]
+    if total_value > 0:
+        values.append(float(total_value))
+    if not values:
+        return 0.0
+
+    peak = values[0]
+    max_drawdown = 0.0
+    for value in values:
+        peak = max(peak, value)
+        if peak:
+            drawdown = (value / peak - 1) * 100
+            max_drawdown = min(max_drawdown, drawdown)
+    return round(max_drawdown, 2)
+
+
 def _record_snapshot(notes: str = "") -> float:
     """Record today's portfolio value. Returns total_value_usd."""
     state = get_portfolio_state(refresh_prices=False)
     total = state.get("total_value_usd", 0.0)
-    upsert_pnl_snapshot(total, notes=notes)
+    positions = state.get("positions", [])
+    snapshots = list_snapshots_asc()
+    cashflows = list_cashflows()
+    snapshot_date = date.today()
+
+    upsert_pnl_snapshot(
+        total,
+        notes=notes,
+        cash=_cash_value_from_positions(positions),
+        daily_return_pct=_daily_return_pct(total, snapshot_date, snapshots, cashflows),
+        max_drawdown_pct=_max_drawdown_pct(total, snapshot_date, snapshots),
+        top_position_weight=_top_position_weight(positions),
+        positions_json=json.dumps(positions, ensure_ascii=False, default=str),
+    )
     return total
 
 
