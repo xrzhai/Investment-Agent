@@ -18,6 +18,9 @@ reviews/**
 !reviews/README.md
 !reviews/daily/
 !reviews/daily/.gitkeep
+Portfolio.xlsx
+Portfolio.backup_before_weight_update_*.xlsx
+~$*.xlsx
 
 # Private coverage / thesis state
 coverage/*/**
