@@ -1,13 +1,24 @@
 # Credentials & secrets
 .env
+.env.*
+!.env.example
+.private/
+secrets/
+credentials/
 
 # Local runtime state
 .hermes/
-.vscode/settings.json
 .claude/
+.vscode/
+.venv/
+.pytest_cache/
 CLAUDE.md
 mine investment policy/
 portfolio.db
++
++# Generated artifacts
++models_dump.json
++nul
 
 # Database
 data/**

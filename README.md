@@ -48,7 +48,7 @@
 3. 再读 `skills/investment-agent/project-context.md`
 4. 再读对应 workflow 文档：`skills/investment-agent/workflows/*.md`
 5. 执行时优先调用 `app/tools/*.py`
-6. 只有人工原子操作、调试或最简单场景，才退回 `python run.py ...`
+6. 只有人工原子操作、调试或最简单场景，才退回 `scripts/ia ...`
 7. 不做自动执行，不跳过归档，不把主观叙事伪装成确定性计算结果
 
 工作分层建议如下：
@@ -56,7 +56,7 @@
   - 业务逻辑和确定性计算层
 - `app/tools/*.py`
   - Agent 的主接口层
-- `python run.py ...`
+- `scripts/ia ...`
   - 人工使用的薄 CLI
 - `skills/investment-agent/workflows/*.md`
   - 高阶 workflow 文档层
@@ -70,24 +70,38 @@
 
 目标不是先学会所有功能，而是先把 deterministic portfolio state 跑起来。
 
-### 1) Install
+### 1) Install / runtime
+
+本机约定：mine 的大部分 Python 项目依赖装在 Windows conda `work` 环境里。WSL/Hermes 里不要默认裸用 `python3` 跑本项目；优先用 repo launcher：
 
 ```bash
-pip install -r requirements.txt
+scripts/ia --help
+```
+
+首次或补依赖：
+
+```bash
+workpip install -r requirements.txt
 cp .env.example .env
+python3 scripts/check_setup.py
 ```
 
 说明：
-- 当前 `.env.example` 只给了 JQData / 聚宽示例变量
+- `scripts/ia ...` 默认调用 `INVESTMENT_AGENT_PYTHON` / `MINE_WORK_PYTHON`，否则回退到 `/mnt/c/Users/zhaix/miniconda3/envs/work/python.exe`
+- `python3 scripts/check_setup.py` 即使从 Hermes venv 启动，也会自动切到 canonical project Python，避免误报 Hermes 环境缺依赖
+- `scripts/ia ...` 会在导入应用代码前加载项目根目录的 `.env`
+- `.env.example` 只保存变量 schema，不保存真实 secrets
 - 如果你暂时只跑美股 / 通用流程，也可以先不填 A 股凭证
-- 如果你要使用当前仓库里的 A 股数据工具示例，再补 `JQ_USER` / `JQ_PASS`
+- 当前 mine 本机默认不使用 JQData；A 股研究数据优先走 AkShare / 同花顺 THS / 东方财富公开接口 + 官方公告/PDF
+- 如果你明确要重新启用 JQData，再按 `.env.example` 里的注释补 `JQ_USER` / `JQ_PASS`
+- 如果你要使用 LLM-backed analysis 命令，可按 `.env.example` 配置 `INVESTMENT_AGENT_LLM_CMD` / `INVESTMENT_AGENT_LLM_ARGS`
 
 ### 2) Import or add positions
 
 导入 CSV：
 
 ```bash
-python run.py portfolio import portfolio.csv
+scripts/ia portfolio import portfolio.csv
 ```
 
 CSV 头至少应包含：
@@ -99,15 +113,15 @@ CSV 头至少应包含：
 也可以手动添加：
 
 ```bash
-python run.py portfolio add AAPL 10 --cost 150
-python run.py portfolio add 600519.SH 100 --cost 1680 --market CN_A
+scripts/ia portfolio add AAPL 10 --cost 150
+scripts/ia portfolio add 600519.SH 100 --cost 1680 --market CN_A
 ```
 
 如果是记录实际成交，优先用：
 
 ```bash
-python run.py portfolio trade NFLX buy 20 --price 97.83 --fees 6.40
-python run.py portfolio trade NFLX sell 10 --price 120
+scripts/ia portfolio trade NFLX buy 20 --price 97.83 --fees 6.40
+scripts/ia portfolio trade NFLX sell 10 --price 120
 ```
 
 其中：
@@ -117,10 +131,10 @@ python run.py portfolio trade NFLX sell 10 --price 120
 ### 3) Inspect current state
 
 ```bash
-python run.py portfolio summary
-python run.py portfolio refresh
-python run.py portfolio check
-python run.py options summary
+scripts/ia portfolio summary
+scripts/ia portfolio refresh
+scripts/ia portfolio check
+scripts/ia options summary
 ```
 
 做到这里，你已经把这套系统最底层的 deterministic portfolio state 跑起来了。
@@ -146,12 +160,12 @@ python run.py options summary
 常见入口：
 
 ```bash
-python run.py portfolio import portfolio.csv
-python run.py portfolio summary
-python run.py portfolio refresh
-python run.py portfolio check
-python run.py options list
-python run.py options summary
+scripts/ia portfolio import portfolio.csv
+scripts/ia portfolio summary
+scripts/ia portfolio refresh
+scripts/ia portfolio check
+scripts/ia options list
+scripts/ia options summary
 ```
 
 对于美股 short put，当前项目的最小支持范围是：
@@ -260,8 +274,8 @@ python run.py options summary
 
 当前仓库里的默认示例是：
 - US / global 价格与部分市场数据：项目当前实现里会用到 yfinance 等通用来源
-- CN_A 基本面 / 市场数据：当前 workflow 示例偏向 `app/tools/cn_market_data_tools.py`
-- `.env.example` 当前提供的是 JQData / 聚宽示例变量：`JQ_USER` / `JQ_PASS`
+- CN_A 研究数据：mine 本机默认走 AkShare / 同花顺 THS / 东方财富公开接口 + 官方公告/PDF
+- JQData / 聚宽只是 optional provider；当前本机已禁用，不作为默认依赖
 
 但这不代表：
 - 聚宽是唯一正确的数据源
@@ -280,7 +294,7 @@ python run.py options summary
 | --- | --- | --- | --- |
 | Portfolio state / policy checks | Python 本地计算 | 否，计算逻辑应保持确定性 | 这是工作流底座，不应外包给 LLM |
 | US / global 市场数据 | 当前实现中的通用 provider（如 yfinance） | 是 | 适合快速接入，但某些字段要谨慎 |
-| CN_A 基本面 / 市场数据 | `app/tools/cn_market_data_tools.py` + JQData 示例 | 是 | README 不应把 JQData 写成唯一依赖 |
+| CN_A 基本面 / 市场数据 | AkShare / 同花顺 THS / 东方财富公开接口 + 官方公告/PDF；JQData optional | 是 | 不把 JQData 写成唯一依赖；关键事实仍需公告/PDF核验 |
 | Thesis 中的关键估值字段验证 | 第二数据源 / 人工交叉验证 | 应当保留 | EPS、Forward P/E、ADR 指标尤其要谨慎 |
 
 ### 当前已知的数据质量约束
@@ -295,8 +309,9 @@ python run.py options summary
 - 这类指标应手算、谨慎使用，或干脆省略
 
 3. A 股不要直接把 yfinance 当主基本面源
-- 如果沿用当前 repo 的默认示例，应优先看 `app/tools/cn_market_data_tools.py`
-- 但底层 provider 仍然可以根据你的环境替换
+- mine 本机默认优先使用 AkShare / 同花顺 THS / 东方财富公开接口，再用官方公告/PDF核验关键数字
+- 如果沿用当前 repo 的工具入口，可看 `app/tools/cn_market_data_tools.py`，但不要把 JQData 当成默认必需项
+- 底层 provider 可根据环境替换
 
 ## What you should customize
 
@@ -312,7 +327,7 @@ python run.py options summary
 | `app/prompts/daily_review.md` | daily review 输出结构 | 默认模板 | 你想调整输出风格时改 | 应保留事实约束，不要鼓励编造数据 |
 | `app/prompts/asset_analysis.md` | 单标的分析 prompt | 默认模板 | 你想改变分析表达方式时改 | 影响 agent 的分析口径 |
 | `skills/investment-agent/workflows/*.md` | Agent workflow 规范 | 默认协作协议 | 你有更成熟的协作方式时改 | 影响 Agent 的执行顺序和留痕方式 |
-| `.env` | 数据源 / 外部服务凭证 | 用户自有 | 接入数据源时必改 | 当前示例含 JQData / 聚宽变量，但不限定必须用它 |
+| `.env` | 数据源 / 外部服务凭证 | 用户自有 | 接入新数据源时再改 | 当前 mine 本机不保存 JQData；A 股默认走 AkShare/THS/Eastmoney + 官方公告/PDF |
 
 ### 两个特别重要的定制点
 
@@ -331,7 +346,7 @@ python run.py options summary
 
 #### 数据源配置
 
-当前仓库只是提供了一个能跑通的默认示例，不是在宣称“聚宽 = 唯一标准答案”。
+当前仓库不是在宣称“聚宽 = 唯一标准答案”。mine 本机当前默认：A 股研究数据走 AkShare / 同花顺 THS / 东方财富公开接口 + 官方公告/PDF；JQData 已禁用，只作为以后可重新接入的 optional provider。
 
 如果你有更适合自己的 A 股数据源：
 - 可以替换 provider
@@ -361,7 +376,7 @@ python run.py options summary
 
 ### 3. Human CLI
 - `app/cli/`
-- `python run.py ...`
+- `scripts/ia ...`
 
 这是面向人工的薄 CLI，适合：
 - import

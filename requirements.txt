@@ -5,4 +5,5 @@ yfinance
 rich
 jqdatasdk
 plotext
+python-dotenv
 pytest

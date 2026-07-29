@@ -4,6 +4,7 @@ Routes A-share symbols (.SH/.SZ/.BJ) to JQData; everything else to yfinance.
 """
 from __future__ import annotations
 
+import math
 from typing import Optional
 
 import yfinance as yf
@@ -13,6 +14,17 @@ from app.services import jqdata_provider
 
 def _is_cn_a(symbol: str) -> bool:
     return symbol.endswith((".SH", ".SZ", ".BJ"))
+
+
+def _coerce_valid_price(value) -> Optional[float]:
+    """Return a finite positive price, otherwise None."""
+    try:
+        price = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(price) or price <= 0:
+        return None
+    return price
 
 
 def get_price(symbol: str) -> Optional[float]:
@@ -37,11 +49,11 @@ def get_price(symbol: str) -> Optional[float]:
         info = ticker.fast_info
         price = getattr(info, "last_price", None) or getattr(info, "regularMarketPrice", None)
         if price:
-            return float(price)
+            return _coerce_valid_price(price)
         # Fallback: last close from history
         hist = ticker.history(period="2d")
         if not hist.empty:
-            return float(hist["Close"].iloc[-1])
+            return _coerce_valid_price(hist["Close"].iloc[-1])
     except Exception:
         pass
     return None
@@ -59,7 +71,7 @@ def _get_cn_price_yfinance_fallback(symbol: str) -> Optional[float]:
         ticker = yf.Ticker(yf_sym)
         hist = ticker.history(period="5d")
         if not hist.empty:
-            return float(hist["Close"].iloc[-1])
+            return _coerce_valid_price(hist["Close"].iloc[-1])
     except Exception:
         pass
     return None
@@ -76,9 +88,10 @@ def get_batch_prices(symbols: list[str]) -> dict[str, Optional[float]]:
     if cn_syms:
         cn_prices = jqdata_provider.get_batch_prices(cn_syms)
         for sym, price in cn_prices.items():
-            if price is None:
-                price = _get_cn_price_yfinance_fallback(sym)
-            results[sym] = price
+            valid_price = _coerce_valid_price(price)
+            if valid_price is None:
+                valid_price = _get_cn_price_yfinance_fallback(sym)
+            results[sym] = valid_price
 
     # Individual prices for other symbols (yfinance)
     for sym in other_syms:
