@@ -1,9 +1,0 @@
-typer
-pydantic
-sqlmodel
-yfinance
-rich
-jqdatasdk
-plotext
-python-dotenv
-pytest

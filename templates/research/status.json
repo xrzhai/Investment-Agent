@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "symbol": "SYMBOL",
+  "company_name": "",
+  "research_state": "active",
+  "current_thesis": "v1_YYYY-MM-DD.md",
+  "thesis_as_of": "YYYY-MM-DD",
+  "summary_path": "summary.md",
+  "facts_path": "facts.jsonl",
+  "sources_path": "sources.json",
+  "last_event_at": null,
+  "last_reviewed_at": null,
+  "next_review_trigger": "",
+  "active_topics": [],
+  "evidence_gaps": [],
+  "ic_status": "UNVERIFIABLE"
+}

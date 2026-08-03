@@ -1,7 +1,6 @@
 # Credentials & secrets
 .env
 .env.*
-!.env.example
 .private/
 secrets/
 credentials/
@@ -15,20 +14,21 @@ credentials/
 CLAUDE.md
 mine investment policy/
 portfolio.db
-+
-+# Generated artifacts
-+models_dump.json
-+nul
+
+# Generated artifacts
+models_dump.json
+nul
+.coverage
+htmlcov/
 
 # Database
 data/**
+!data/README.md
 
 # Private portfolio runtime outputs
 reviews/**
 !reviews/
 !reviews/README.md
-!reviews/daily/
-!reviews/daily/.gitkeep
 Portfolio.xlsx
 Portfolio.backup_before_weight_update_*.xlsx
 ~$*.xlsx
@@ -36,11 +36,14 @@ Portfolio.backup_before_weight_update_*.xlsx
 # Private coverage / thesis state
 coverage/*/**
 coverage/COVERAGE_LOG.md
-!coverage/THESIS_TEMPLATE.md
-!coverage/COVERAGE_WORKFLOW.md
+!coverage/ASSET_CONVENTION.md
 
 # Private benchmark / evaluation material
 docs/benchmark_v2/**
+
+# Unstructured notes are never loaded by the context router
+research_notes/**
+!research_notes/README.md
 
 # Python
 __pycache__/

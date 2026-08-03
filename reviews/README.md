@@ -1,10 +1,20 @@
-# reviews/
+# Private Reviews
 
-This directory contains local portfolio review artifacts such as:
-- daily reviews
-- suggest outputs
-- decision logs
-- execution records
+This ignored directory contains the human-readable audit trail around the
+structured portfolio ledger.
 
-These files are part of the user's private operating history and are intentionally kept local.
-The repository only keeps this directory scaffold so each user can maintain their own review history without pushing it to GitHub.
+Recommended layout:
+
+```text
+reviews/
+  portfolio/YYYY/YYYY-MM-DD.md
+  decisions/YYYY/YYYY-MM-DD_SYMBOL.md
+  executions/YYYY/YYYY-MM-DD_SYMBOL.md
+  postmortems/YYYY/YYYY-MM-DD_slug.md
+```
+
+- Portfolio reviews use `templates/portfolio/review.md`.
+- A decision record must exist before a normal trade is recorded.
+- Execution records cite broker evidence and the decision record.
+- Review files are private and are not loaded by research-only tasks.
+- This repository tracks only this README; local review history stays ignored.
