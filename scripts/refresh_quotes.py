@@ -1,12 +1,13 @@
 """Refresh portfolio quotes + FX and print portfolio state.
 
 Thin CLI wrapper over the harness's built-in market-data bridge. All logic
-lives in ``harness.portfolio.MarketDataClient`` / ``PortfolioService.refresh_quotes``;
+lives in ``harness.portfolio.MarketDataClient`` / ``PortfolioService``;
 this script only wires it to a terminal-friendly output.
 
 Usage:
-    python scripts/refresh_quotes.py            # pull + persist + show state
-    python scripts/refresh_quotes.py --dry-run  # pull only, do not persist
+    python scripts/refresh_quotes.py             # pull + persist + show state
+    python scripts/refresh_quotes.py --record    # pull + persist + record snapshot
+    python scripts/refresh_quotes.py --dry-run   # pull only, do not persist
 """
 from __future__ import annotations
 
@@ -24,6 +25,7 @@ from harness.settings import HarnessPaths  # noqa: E402
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true", help="pull prices but do not persist")
+    ap.add_argument("--record", action="store_true", help="record a snapshot after refresh")
     args = ap.parse_args()
 
     paths = HarnessPaths.discover()
@@ -61,6 +63,19 @@ def main() -> int:
         flags = ",".join(v.data_quality) if v.data_quality else "-"
         print(f"  {v.symbol:10s} {v.quantity:>10.3f} {v.current_price if v.current_price else 0:>12.4f} "
               f"wt={v.weight_pct if v.weight_pct is not None else float('nan'):>7.2f}%  q=[{flags}]")
+
+    if args.record:
+        if not state.valuation_complete:
+            print("\n[record] REFUSED: portfolio valuation incomplete; fix missing prices/FX first")
+            return 1
+        snapshot, event_id = service.record_snapshot(
+            notes=f"manual refresh {state.as_of.date()} by Hermes",
+            source_ref="refresh_quotes",
+        )
+        print(f"\n[record] snapshot {snapshot.snapshot_date} saved  "
+              f"total={snapshot.total_value} cash={snapshot.cash} "
+              f"daily_return={snapshot.daily_return_pct}% max_dd={snapshot.max_drawdown_pct}%")
+
     if report.errors:
         print("\npull errors:")
         for e in report.errors:
