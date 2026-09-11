@@ -1,17 +1,15 @@
-# Harness Postmortem — YYYY-MM-DD
+# 过程复盘 — YYYY-MM-DD
 
-**Task:**  
-**Affected artifact:**  
-**Review status:** draft / approved / retired
+**任务：**
 
-## Failure
+**受影响的 artifact：**
 
-## Impact
+## 发生了什么
 
-## Root cause
+## 影响
 
-## Violated contract
+## 为什么会发生
 
-## Prevention rule
+## 这次学到了什么
 
-## Future trigger check
+## 下次如何更早识别

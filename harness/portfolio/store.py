@@ -123,6 +123,15 @@ class PortfolioStore:
                     id INTEGER PRIMARY KEY,
                     event_date DATE NOT NULL,
                     amount_usd REAL NOT NULL,
+                    amount_local REAL,
+                    currency TEXT NOT NULL DEFAULT 'USD',
+                    amount_base REAL,
+                    fx_rate_to_base REAL,
+                    fx_as_of TIMESTAMP,
+                    fx_source TEXT,
+                    fx_status TEXT NOT NULL DEFAULT 'legacy',
+                    flow_scope TEXT NOT NULL DEFAULT 'external',
+                    flow_type TEXT NOT NULL DEFAULT 'deposit',
                     description TEXT NOT NULL DEFAULT '',
                     created_at TIMESTAMP
                 );
@@ -168,6 +177,43 @@ class PortfolioStore:
                     updated_at TIMESTAMP NOT NULL
                 );
                 """
+            )
+            existing_columns = {
+                row[1]
+                for row in conn.execute("PRAGMA table_info(cashflow_events)").fetchall()
+            }
+            migrations = {
+                "amount_local": "ALTER TABLE cashflow_events ADD COLUMN amount_local REAL",
+                "currency": "ALTER TABLE cashflow_events ADD COLUMN currency TEXT NOT NULL DEFAULT 'USD'",
+                "amount_base": "ALTER TABLE cashflow_events ADD COLUMN amount_base REAL",
+                "fx_rate_to_base": "ALTER TABLE cashflow_events ADD COLUMN fx_rate_to_base REAL",
+                "fx_as_of": "ALTER TABLE cashflow_events ADD COLUMN fx_as_of TIMESTAMP",
+                "fx_source": "ALTER TABLE cashflow_events ADD COLUMN fx_source TEXT",
+                "fx_status": "ALTER TABLE cashflow_events ADD COLUMN fx_status TEXT NOT NULL DEFAULT 'legacy'",
+                "flow_scope": "ALTER TABLE cashflow_events ADD COLUMN flow_scope TEXT NOT NULL DEFAULT 'external'",
+                "flow_type": "ALTER TABLE cashflow_events ADD COLUMN flow_type TEXT NOT NULL DEFAULT 'deposit'",
+            }
+            for column, statement in migrations.items():
+                if column not in existing_columns:
+                    conn.execute(statement)
+            conn.execute(
+                "UPDATE cashflow_events SET amount_local=amount_usd WHERE amount_local IS NULL"
+            )
+            conn.execute(
+                "UPDATE cashflow_events SET amount_base=amount_usd WHERE amount_base IS NULL"
+            )
+            conn.execute(
+                "UPDATE cashflow_events SET fx_rate_to_base=1.0 WHERE fx_rate_to_base IS NULL AND currency='USD'"
+            )
+            conn.execute(
+                "UPDATE cashflow_events SET fx_status='legacy_base' WHERE fx_status IS NULL OR fx_status=''"
+            )
+            conn.execute(
+                "UPDATE cashflow_events SET flow_scope='external' WHERE flow_scope IS NULL OR flow_scope=''"
+            )
+            conn.execute(
+                "UPDATE cashflow_events SET flow_type=CASE WHEN amount_local < 0 THEN 'withdrawal' ELSE 'deposit' END "
+                "WHERE flow_type IS NULL OR flow_type='' OR flow_type='deposit' AND amount_local < 0"
             )
             conn.commit()
 
@@ -500,18 +546,128 @@ class PortfolioStore:
             closed=closed,
         )
 
+    def amend_correction_event_occurred_at(
+        self,
+        *,
+        event_id: str,
+        occurred_at: datetime,
+        amendment_reason: str,
+        source_ref: str | None = None,
+    ) -> str:
+        """Amend the historical occurrence time of an existing correction event.
+
+        This is intentionally narrower than a general event update: only events
+        recorded with ``source='correction'`` may be amended, and the previous
+        timestamp plus the amendment reason are retained in the event payload.
+        The event's ``recorded_at`` remains unchanged.
+        """
+        if not event_id.strip():
+            raise ValueError("event_id cannot be empty")
+        if occurred_at.tzinfo is None:
+            raise ValueError("event occurred_at must be timezone-aware")
+        if not amendment_reason.strip():
+            raise ValueError("amendment_reason cannot be empty")
+
+        occurred_at = occurred_at.astimezone(timezone.utc)
+        self.ensure_schema()
+        with self.connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                "SELECT * FROM portfolio_events WHERE event_id=?",
+                (event_id,),
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"portfolio event not found: {event_id}")
+            if row["source"] != "correction":
+                raise ValueError("only correction events can be amended")
+
+            payload = json.loads(row["payload_json"])
+            amendments = payload.setdefault("amendments", [])
+            amendments.append(
+                {
+                    "amended_at": self._utc_now().isoformat(),
+                    "previous_occurred_at": row["occurred_at"],
+                    "reason": amendment_reason,
+                }
+            )
+            conn.execute(
+                "UPDATE portfolio_events SET occurred_at=?, payload_json=?, source_ref=? WHERE event_id=?",
+                (
+                    occurred_at.isoformat(),
+                    json.dumps(payload, ensure_ascii=False, sort_keys=True),
+                    source_ref or row["source_ref"],
+                    event_id,
+                ),
+            )
+            conn.commit()
+        return event_id
+
     def record_cashflow(
         self,
         *,
-        amount_usd: float,
+        amount_usd: float | None = None,
         description: str,
         event_date: date | None = None,
         source: str = "cashflow_evidence",
         cashflow_ref: str,
         adjust_cash_position: bool = True,
+        amount_local: float | None = None,
+        currency: str = "USD",
+        amount_base: float | None = None,
+        fx_rate_to_base: float | None = None,
+        fx_as_of: datetime | None = None,
+        fx_source: str | None = None,
+        fx_status: str | None = None,
+        flow_scope: str = "external",
+        flow_type: str | None = None,
     ) -> str:
         if not cashflow_ref.strip():
             raise ValueError("cashflow recording requires a cashflow_ref")
+        currency = currency.upper()
+        if flow_scope not in {"external", "internal"}:
+            raise ValueError("flow_scope must be 'external' or 'internal'")
+        if amount_local is None:
+            if amount_usd is None:
+                raise ValueError("cashflow recording requires amount_local or amount_usd")
+            if currency != "USD":
+                raise ValueError("non-USD cashflows require amount_local")
+            amount_local = float(amount_usd)
+        else:
+            amount_local = float(amount_local)
+        if amount_base is None and amount_usd is not None:
+            amount_base = float(amount_usd)
+        if amount_base is None:
+            if fx_rate_to_base is not None:
+                fx_rate_to_base = float(fx_rate_to_base)
+                if fx_rate_to_base <= 0:
+                    raise ValueError("fx_rate_to_base must be positive")
+                amount_base = amount_local * fx_rate_to_base
+                fx_status = fx_status or "calculated_from_rate"
+            elif currency == "USD":
+                amount_base = amount_local
+                fx_rate_to_base = 1.0
+                fx_status = fx_status or "base_currency"
+            else:
+                raise ValueError("non-base cashflows require amount_base or fx_rate_to_base")
+        else:
+            amount_base = float(amount_base)
+            if fx_rate_to_base is not None:
+                fx_rate_to_base = float(fx_rate_to_base)
+                if fx_rate_to_base <= 0:
+                    raise ValueError("fx_rate_to_base must be positive")
+            if fx_status is None:
+                fx_status = "base_currency" if currency == "USD" else "provided_base"
+        if fx_as_of is not None:
+            if fx_as_of.tzinfo is None:
+                raise ValueError("fx_as_of must be timezone-aware")
+            fx_as_of = fx_as_of.astimezone(timezone.utc)
+        fx_status = fx_status or ("base_currency" if currency == "USD" else "provided_base")
+        if flow_type is None:
+            flow_type = "withdrawal" if amount_local < 0 else "deposit"
+        if flow_type not in {"deposit", "withdrawal", "internal_transfer", "adjustment"}:
+            raise ValueError("unsupported flow_type")
+        amount_base = round(amount_base, 10)
+        amount_usd = amount_base
         event_date = event_date or date.today()
         occurred_at = datetime.combine(event_date, datetime.min.time(), tzinfo=timezone.utc)
         event_id = f"cashflow:{cashflow_ref.strip()}"
@@ -521,29 +677,56 @@ class PortfolioStore:
             if conn.execute("SELECT 1 FROM portfolio_events WHERE event_id=?", (event_id,)).fetchone():
                 raise ValueError(f"cashflow_ref is already recorded: {cashflow_ref}")
             conn.execute(
-                "INSERT INTO cashflow_events(event_date, amount_usd, description, created_at) VALUES(?,?,?,?)",
-                (event_date.isoformat(), amount_usd, description, self._utc_now().isoformat()),
+                "INSERT INTO cashflow_events(event_date, amount_usd, amount_local, currency, amount_base, "
+                "fx_rate_to_base, fx_as_of, fx_source, fx_status, flow_scope, flow_type, description, created_at) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (
+                    event_date.isoformat(),
+                    amount_usd,
+                    amount_local,
+                    currency,
+                    amount_base,
+                    fx_rate_to_base,
+                    fx_as_of.isoformat() if fx_as_of else None,
+                    fx_source,
+                    fx_status,
+                    flow_scope,
+                    flow_type,
+                    description,
+                    self._utc_now().isoformat(),
+                ),
             )
             if adjust_cash_position:
-                row = conn.execute("SELECT * FROM positions WHERE symbol='CASH_USD' ORDER BY id LIMIT 1").fetchone()
-                new_cash = (float(row["quantity"]) if row else 0.0) + amount_usd
-                if row:
-                    conn.execute(
-                        "UPDATE positions SET quantity=?, avg_cost=1, current_price=1, market='US', currency='USD', updated_at=? WHERE id=?",
-                        (new_cash, occurred_at.isoformat(), row["id"]),
-                    )
-                else:
-                    conn.execute(
-                        "INSERT INTO positions(symbol, quantity, avg_cost, current_price, updated_at, market, currency) VALUES('CASH_USD',?,1,1,?,'US','USD')",
-                        (new_cash, occurred_at.isoformat()),
-                    )
+                previous_cash, new_cash = self._adjust_cash_position(
+                    conn,
+                    currency=currency,
+                    amount=amount_local,
+                    occurred_at=occurred_at,
+                )
+            else:
+                previous_cash, new_cash = None, None
             self._append_event(
                 conn,
                 event_id=event_id,
                 event_type="cashflow",
                 occurred_at=occurred_at,
-                symbol="CASH_USD",
-                payload={"amount_usd": amount_usd, "description": description, "adjusted_cash_position": adjust_cash_position},
+                symbol=f"CASH_{currency}",
+                payload={
+                    "amount_local": amount_local,
+                    "currency": currency,
+                    "amount_base": amount_base,
+                    "amount_usd": amount_usd,
+                    "fx_rate_to_base": fx_rate_to_base,
+                    "fx_as_of": fx_as_of.isoformat() if fx_as_of else None,
+                    "fx_source": fx_source,
+                    "fx_status": fx_status,
+                    "flow_scope": flow_scope,
+                    "flow_type": flow_type,
+                    "description": description,
+                    "adjusted_cash_position": adjust_cash_position,
+                    "previous_cash": previous_cash,
+                    "new_cash": new_cash,
+                },
                 source=source,
                 source_ref=cashflow_ref,
             )
@@ -999,8 +1182,20 @@ class PortfolioStore:
                     event_id=event_id,
                     event_type="legacy_cashflow",
                     occurred_at=occurred,
-                    symbol="CASH_USD",
-                    payload={"amount_usd": row["amount_usd"], "description": row["description"]},
+                    symbol=f"CASH_{row['currency']}",
+                    payload={
+                        "amount_local": row["amount_local"],
+                        "currency": row["currency"],
+                        "amount_base": row["amount_base"],
+                        "amount_usd": row["amount_usd"],
+                        "fx_rate_to_base": row["fx_rate_to_base"],
+                        "fx_as_of": row["fx_as_of"],
+                        "fx_source": row["fx_source"],
+                        "fx_status": row["fx_status"],
+                        "flow_scope": row["flow_scope"],
+                        "flow_type": row["flow_type"],
+                        "description": row["description"],
+                    },
                     source="legacy_migration",
                     source_ref=None,
                     ignore_existing=True,

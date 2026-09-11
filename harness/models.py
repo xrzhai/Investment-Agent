@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -35,15 +34,3 @@ class ValidationReport(BaseModel):
     @property
     def ok(self) -> bool:
         return self.error_count == 0
-
-
-class LoadedDocument(BaseModel):
-    role: str
-    path: str
-    content: str
-    chars: int
-
-    @classmethod
-    def from_path(cls, role: str, path: Path) -> "LoadedDocument":
-        content = path.read_text(encoding="utf-8")
-        return cls(role=role, path=str(path), content=content, chars=len(content))

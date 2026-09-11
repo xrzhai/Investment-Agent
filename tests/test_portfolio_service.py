@@ -84,6 +84,33 @@ def test_snapshot_is_compact_and_upserts_same_date(harness_paths):
     assert json.loads(snapshot.positions_json)[0]["symbol"] in {"ABC", "CASH_USD"}
 
 
+def test_snapshot_twr_uses_base_currency_cashflow_not_local_amount(harness_paths):
+    store = PortfolioStore(paths=harness_paths)
+    store.set_position_baseline(symbol="CASH_USD", quantity=1_000, avg_cost=1)
+    service = PortfolioService(store, paths=harness_paths)
+
+    service.record_snapshot(snapshot_date=date(2026, 8, 1), source_ref="baseline")
+    store.record_cashflow(
+        amount_local=700,
+        currency="CNY",
+        fx_rate_to_base=1 / 7,
+        fx_as_of=datetime(2026, 8, 2, tzinfo=timezone.utc),
+        fx_source="historical_close",
+        description="CNY deposit",
+        event_date=date(2026, 8, 2),
+        cashflow_ref="cashflow-cny-twr-test",
+    )
+
+    snapshot, _ = service.record_snapshot(
+        snapshot_date=date(2026, 8, 2),
+        fx_rates_to_base={"CNY": 1 / 7},
+        source_ref="twr-check",
+    )
+
+    assert snapshot.total_value == 1_100
+    assert snapshot.daily_return_pct == 0
+
+
 def test_policy_reports_concentration_without_recommending_a_trade(harness_paths):
     store = PortfolioStore(paths=harness_paths)
     store.set_position_baseline(symbol="CASH_USD", quantity=1_000, avg_cost=1)

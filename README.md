@@ -1,109 +1,95 @@
-# Investment Research Harness
+# 投资研究 Harness
 
-这是一个供 AI Agent 进入后使用的个人投研管理仓库。
+这是一个供 AI Agent 使用的个人投研知识库与组合管理仓库。
 
-它不是内置 Agent 的应用，不提供自动交易，也不把 LLM 调用封装进项目。Agent 负责研究、判断和编排；仓库负责流程、事实、确定性计算、校验与归档。
+它不内置 LLM，不提供自动交易，也不试图把研究变成一条固定流水线。Agent 负责
+阅读、研究、判断和创作；仓库负责保存用户的投资思想、历史语境、研究材料以及少量
+确实需要确定性的组合工具。
 
-## 核心定位
+## 三个职能
 
-- **Research-first**：主要服务公司基本面研究、财报更新、thesis 维护和长期跟踪。
-- **Portfolio-aware**：保留持仓、现金、期权、交易、快照和组合规则，但研究任务默认不加载这些信息。
-- **Context-safe**：按任务选择最小上下文，历史版本、原始材料和交易信息不会自动进入研究上下文。
-- **Source-grounded**：结构化事实必须带来源、时点和适用期间；研究笔记不能自动升级成事实。
-- **Human-controlled**：Agent 可以辅助研究、记录和检查，但不能自动下单或替用户做最终承诺。
+| 职能 | 主要内容 | 入口 |
+|---|---|---|
+| 记录与回顾 | 公司研究、专题笔记、决策理由、组合事件和复盘 | `coverage/`、`research_notes/`、`reviews/` |
+| Research / idea generation | 从已有记录和新证据继续推理，形成新问题、观点或 thesis | `config/research-context.md`、`workflows/`、知识索引 |
+| 投资组合管理 | 持仓、现金、出入金、交易、期权、报价和组合快照 | `harness/portfolio/`、`data/investment.db` |
+
+## 设计原则
+
+- Harness 提供上下文，不限制上下文；
+- Workflow 是可选的研究提示，不是任务门禁；
+- Agent 可以自由阅读完整 thesis、历史笔记、来源和跨公司案例；
+- Markdown 是主要知识载体，结构化只用于确有复用或事务价值的内容；
+- 估值属于公司研究，个人成本、盈亏和仓位属于组合管理；
+- 研究可以自由组织，但重要事实应尽量保留来源和时点；
+- 任何交易都需要用户确认和外部执行证据。
 
 ## Agent 从哪里开始
 
-进入仓库后先读 [AGENTS.md](AGENTS.md)。它定义：
+先读 [AGENTS.md](AGENTS.md)。公司研究通常再读
+[`config/research-context.md`](config/research-context.md)。之后可以使用摘要、索引、
+tags 或 `rg` 找到相关资料，并随着问题展开自由扩展阅读范围。
 
-1. 不同任务应读取哪些文件；
-2. 哪些目录默认禁止递归加载；
-3. Research 与 Portfolio 什么时候可以合并；
-4. 如何更新 thesis、事实、来源和组合状态；
-5. 写入后的校验要求。
+`status.json`、`summary.md` 和知识索引只是导航。仓库没有字符预算、fact 数量预算，
+也不会把完整 thesis 裁成固定大小的 context pack。
 
 ## 目录
 
 ```text
-AGENTS.md          Agent 入口与执行边界
-contracts/         架构、上下文、事实和组合数据契约
-workflows/         按任务路由的工作流
-templates/         research / review / decision 模板
-harness/           确定性 Python 能力，无内置 Agent、无产品 CLI
-coverage/          每个标的的研究工作区
-reviews/           组合复盘、决策与执行记录
-config/            投资原则和组合约束
-data/              本地 SQLite 结构化组合事实源
-research_notes/    历史/专题研究；默认不进入任何上下文
-tests/             Harness 契约与污染防护测试
+AGENTS.md          Agent 指南与基本边界
+config/            用户的研究思想、投资原则和组合偏好
+coverage/          公司研究、thesis、来源与历史版本
+research_notes/    探索性笔记、专题研究和 idea
+reviews/           组合复盘、决策、执行记录和过程复盘
+workflows/         可选的研究/记录提示卡
+templates/         可选写作起点
+contracts/         来源、组合事务和存储约定
+harness/research/  可选的来源/事实/版本辅助工具
+harness/portfolio/ 确定性的组合事务与计算
+data/              私有 SQLite 组合事实
+tests/             确定性代码的测试
 ```
 
-## 两个事实域
+## Research
 
-### Research domain
+LLM 可以直接理解 Markdown。旧 thesis、笔记和 review 不需要全部转成 JSON；只有需要
+跨任务复用、筛选、来源追踪或当前状态管理的内容，才值得补充 `facts.jsonl`、
+`sources.json`、tags 或索引。
 
-文件是主要事实载体：
+正式公司覆盖通常保留 `current.md` 指针和版本化 thesis。估值应注明观察日期和关键
+假设，但写法、章节和研究路径由 Agent 根据公司决定。
 
-- `coverage/{SYMBOL}/current.md`：当前 thesis 指针；
-- `coverage/{SYMBOL}/status.json`：最小研究状态；
-- `coverage/{SYMBOL}/facts.jsonl`：来源化结构事实；
-- `coverage/{SYMBOL}/sources.json`：来源登记；
-- `coverage/{SYMBOL}/summary.md`：供跨标的/组合任务读取的短摘要；
-- thesis、估值底稿和原始材料：仅在具体任务需要时读取。
+## Portfolio
 
-现有 coverage 可以继续使用旧结构；Harness 会以 legacy-compatible 方式读取，并逐个标的迁移。
+SQLite 保存适合事务处理的结构事实，例如持仓、现金、期权、报价和事件。Agent 通过
+`harness.portfolio` 修改这些数据，避免重复记账和部分写入。研究正文和原始来源不放进
+数据库。
 
-### Portfolio domain
-
-SQLite 继续保存适合事务和查询的结构事实：
-
-- 持仓与现金；
-- 低频交易和现金流；
-- 期权合约；
-- 报价及其来源；
-- 组合快照；
-- 追加式 portfolio events。
-
-Agent 不直接修改数据库，而是调用 `harness.portfolio` 中的确定性函数。研究任务默认不读取数据库。
-
-数据库只记录低频、紧凑的结构事件，不保存 PDF、thesis 正文或对话。正常使用一年通常只增长几 MB；更重要的是 Agent 永远读取有上限的查询结果，而不是读取整个数据库。详见 `contracts/retention.md`。
-
-外部 Agent 的最小 Python 入口是 `InvestmentHarness`：
+Python 是可选工具，不是研究入口。没有门面 API 类，按需直接用薄函数：
 
 ```python
-from harness import ContextRequest, ContextTask, InvestmentHarness
+# 组合侧（确定性写/算）：薄函数直调
+from harness.portfolio import PortfolioService, PortfolioStore
+from harness.settings import HarnessPaths
 
-harness = InvestmentHarness()
-pack = harness.context(ContextRequest(task=ContextTask.research_scan, symbol="NVDA"))
+paths = HarnessPaths.discover()
+store = PortfolioStore(paths=paths)
+service = PortfolioService(store, paths=paths)
+state = service.get_state()        # 组合估值
+report = service.refresh_quotes()  # 拉价 + 落库（日常直接跑 scripts/refresh_quotes.py）
 ```
 
-正常成交通过 `PortfolioStore.record_trade()` 记录，并同时传入决策记录的
-`decision_ref` 与券商/执行证据的稳定 `execution_ref`。Harness 不提供下单能力。
-
-## 不再包含
-
-- Typer / Rich 人工 CLI；
-- 内置 Claude、OpenAI 或其他 LLM client；
-- recommendation engine；
-- Agent 编排循环；
-- 自动下单；
-- 把旧 thesis、source docs 或所有 review 一次性塞进上下文的工作流。
-
-## 开发验证
-
-项目使用 `pyproject.toml` 声明依赖。验证 Harness：
-
-```text
-python -m pytest
-```
-
-这只是开发/校验入口，不是面向用户的投资 CLI。
+研究侧不需要 Python：直接读 `coverage/{SYMBOL}/` 下的 Markdown 与 JSONL，或搜索
+`research_notes/`、`reviews/` 中的材料。
 
 ## 隐私
 
-真实数据库、coverage 正文、来源文件和 reviews 默认保留在本地并由 `.gitignore` 排除。公开仓库只保留 Harness、契约、模板和空目录骨架。
+真实数据库、coverage 正文、来源文件和 reviews 默认保留在本地，并由 `.gitignore`
+排除。公开仓库只保留可分享的指南、工具和空目录骨架。
 
-## License
+## 许可证
 
-- 代码：PolyForm Noncommercial 1.0.0
-- 文档、workflow、模板：CC BY-NC 4.0
+- 代码：PolyForm Noncommercial 1.0.0；
+- 文档、workflow 和 template：CC BY-NC 4.0。
+
+详见 [LICENSES.md](LICENSES.md)。

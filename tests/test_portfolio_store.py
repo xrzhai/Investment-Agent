@@ -132,6 +132,49 @@ def test_quote_observation_preserves_source_and_as_of(tmp_path):
     assert events[0].payload["previous_price"] == 123.45
 
 
+def test_correction_event_timestamp_amendment_preserves_audit_context(tmp_path):
+    store = PortfolioStore(db_path=tmp_path / "portfolio.db")
+    occurred_at = datetime(2026, 8, 5, 1, 0, tzinfo=timezone.utc)
+    historical_at = datetime(2026, 7, 23, 0, 0, tzinfo=timezone.utc)
+    store.set_position_baseline(
+        symbol="CASH_CNY",
+        quantity=2_252,
+        avg_cost=0.1479,
+        market="CN_A",
+        currency="CNY",
+    )
+
+    store.record_trade(
+        symbol="CASH_CNY",
+        side="sell",
+        quantity=2_252,
+        price=1,
+        currency="CNY",
+        market="CN_A",
+        occurred_at=occurred_at,
+        source="correction",
+        execution_ref="user-confirmed-cny-cash-clear-test",
+        correction_reason="historical cash withdrawal",
+        adjust_cash_position=False,
+    )
+
+    store.amend_correction_event_occurred_at(
+        event_id="trade:user-confirmed-cny-cash-clear-test",
+        occurred_at=historical_at,
+        amendment_reason="user supplied the original withdrawal date",
+        source_ref="user-confirmed-cny-cash-clear-test:date-amendment",
+    )
+
+    event = next(
+        event
+        for event in store.list_events(limit=10)
+        if event.event_id == "trade:user-confirmed-cny-cash-clear-test"
+    )
+    assert event.occurred_at == historical_at
+    assert event.recorded_at >= occurred_at
+    assert event.payload["amendments"][0]["previous_occurred_at"] == occurred_at.isoformat()
+
+
 def test_event_queries_are_bounded(tmp_path):
     store = PortfolioStore(db_path=tmp_path / "portfolio.db")
 
@@ -231,4 +274,54 @@ def test_cashflow_reference_prevents_duplicate_deposit(tmp_path):
         )
 
     assert store.get_position("CASH_USD").quantity == 1_500
-    assert len(store.list_cashflows()) == 1
+    cashflow = store.list_cashflows()[0]
+    assert cashflow.amount_local == 500
+    assert cashflow.currency == "USD"
+    assert cashflow.amount_base == 500
+    assert cashflow.amount_usd == 500
+    assert cashflow.flow_scope == "external"
+    assert cashflow.flow_type == "deposit"
+
+
+def test_multicurrency_cashflow_keeps_local_and_base_amounts_separate(tmp_path):
+    store = PortfolioStore(db_path=tmp_path / "portfolio.db")
+    store.set_position_baseline(
+        symbol="CASH_CNY",
+        quantity=2_252,
+        avg_cost=1,
+        market="CN_A",
+        currency="CNY",
+    )
+
+    store.record_cashflow(
+        amount_local=-2_252,
+        currency="CNY",
+        fx_rate_to_base=0.1477,
+        fx_as_of=datetime(2026, 7, 23, tzinfo=timezone.utc),
+        fx_source="historical_close",
+        description="CNY withdrawal",
+        event_date=date(2026, 7, 23),
+        cashflow_ref="cash-withdrawal-cny-test",
+    )
+
+    cashflow = store.list_cashflows()[0]
+    assert cashflow.amount_local == -2_252
+    assert cashflow.currency == "CNY"
+    assert cashflow.amount_base == pytest.approx(-332.6204)
+    assert cashflow.amount_usd == pytest.approx(-332.6204)
+    assert cashflow.fx_rate_to_base == 0.1477
+    assert cashflow.fx_status == "calculated_from_rate"
+    assert cashflow.flow_type == "withdrawal"
+    assert store.get_position("CASH_CNY").quantity == 0
+
+
+def test_non_base_cashflow_requires_event_time_conversion(tmp_path):
+    store = PortfolioStore(db_path=tmp_path / "portfolio.db")
+
+    with pytest.raises(ValueError, match="amount_base or fx_rate_to_base"):
+        store.record_cashflow(
+            amount_local=700,
+            currency="CNY",
+            description="missing FX",
+            cashflow_ref="cashflow-missing-fx",
+        )

@@ -1,50 +1,31 @@
-# Retention and Growth Contract
+# 组合数据保留说明
 
-## Principle
+## 原则
 
-Persist audit facts; do not persist bulk context. Database size and Agent
-context size are separate concerns because the Agent receives bounded query
-results, never a database dump.
+Research 正文、来源文档和 Agent 对话继续保存在文件中。SQLite 只保存适合事务和查询的
+组合事实，不保存大块 Markdown、PDF 或 prompt。
 
-## What is retained
+## 长期保留
 
-- `portfolio_events`: append-only, compact structured payloads;
-- `quotes`: only observations used by a review, decision or execution record;
-- `snapshots`: review-time or event-time state, not an automatic daily job;
-- `cashflow_events` and option transitions: permanently;
-- current position rows: mutable read models backed by events.
+- portfolio events、cashflow events 和期权状态变化；
+- 当前持仓读取模型；
+- 实际被 review、decision 或 execution 使用的报价；
+- 有意义的组合 snapshots；
+- 与事件相关的稳定 references。
 
-Do not store source PDFs, filings, transcripts, thesis prose, model prompts or
-Agent conversations as SQLite blobs.
+这些数据增长很慢，不需要为了节省空间删除审计历史。
 
-## Expected growth
+## Agent 如何读取
 
-For a low-frequency portfolio, a conservative year might contain:
+Agent 可以根据问题查询当前状态或历史窗口，并在需要时继续向前追溯。接口可以分页，
+但仓库不设置全局上下文预算，也不规定一次研究最多查看多少事件。
 
-- 100 portfolio events at roughly 1–2 KB each;
-- 500 sourced quotes at well below 1 KB each;
-- 50 compact snapshots with 10–30 positions at roughly 2–10 KB each.
+通常没有必要把整个 SQLite dump 放进对话；应优先查询需要的行和时间范围。若研究发现
+更早历史相关，可以继续扩展查询。
 
-That is normally only a few megabytes per year including indexes. Even a much
-busier history is well within SQLite's practical range. The large files in this
-repository are source documents and images, not structured portfolio rows.
+## 维护
 
-## Context boundary
-
-- Research tasks query zero portfolio rows.
-- Portfolio review reads the current position/option state and bounded research
-  summaries; it does not read the full event log.
-- Trade recording reads the referenced decision and affected rows only.
-- Postmortem requests must specify an event or bounded time window.
-- Event queries are capped; bulk export is a maintenance task, not Agent
-  context.
-
-## Maintenance
-
-- Back up the SQLite file before a schema migration.
-- Run `PRAGMA integrity_check` during a periodic maintenance review.
-- Keep events and cashflows; do not delete audit history to save negligible
-  space.
-- If quotes ever become high frequency, move old quote observations to a dated
-  archive database while retaining event references. Do not introduce this
-  complexity until measured growth justifies it.
+- 数据库 schema 迁移前先备份；
+- 定期维护时可以运行 `PRAGMA integrity_check`；
+- 保留 events 和 cashflows；
+- 只有实际数据规模证明有必要时，才引入归档或分库。

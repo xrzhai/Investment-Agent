@@ -1,16 +1,14 @@
-# Workflow Router
+# 可选工作提示
 
-Choose one primary workflow before reading company or portfolio data.
+这里不是路由表。Agent 不需要先给任务分类，也不需要选择唯一 workflow。
 
-| User intent | Workflow |
-|---|---|
-| Explore a company without updating official coverage | `research-scan.md` |
-| Register a new filing, earnings release or material event | `event-intake.md` |
-| Create or materially update official coverage | `research-update.md` |
-| Challenge whether the current thesis still holds | `thesis-review.md` |
-| Review overall exposure, concentration and attention items | `portfolio-review.md` |
-| Decide whether to change a position | `decision.md` |
-| Record an executed transaction | `trade-record.md` |
-| Capture an Agent/process failure | `postmortem.md` |
+本目录只保留少量可能有用的提示：
 
-Do not merge workflows merely because the information is available. In particular, a research scan is not a portfolio decision.
+- `research.md`：公司研究、事件跟踪、历史泛化和估值时可参考的问题；
+- `portfolio-review.md`：查看整体组合时可参考的维度；
+- `decision.md`：需要形成明确仓位动作时的记录提示；
+- `trade-record.md`：记录外部已执行交易时的事务要求；
+- `postmortem.md`：值得留下流程经验时的复盘提示。
+
+Agent 可以组合、跳过或改写这些提示。Research 的范围、阅读路径和写作结构由问题本身
+决定。唯一不能自由推断的是交易执行：没有用户确认和外部 evidence，不能记录为已成交。

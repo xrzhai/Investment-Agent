@@ -1,13 +1,19 @@
-# Research Notes Sandbox
+# 研究笔记与想法
 
-This directory is for exploratory or cross-company notes that have not been
-promoted into the structured coverage record.
+本目录保存探索性笔记、专题研究、跨公司类比和尚未成熟的想法。
 
-- It is excluded from every default context route.
-- A note is not a source and is not a structured fact.
-- Promote useful material by registering the original source, adding atomic
-  facts and then updating the relevant symbol summary/thesis.
-- Do not use this directory as a second portfolio journal.
+Agent 可以根据问题自由搜索和阅读这里的原文。`KNOWLEDGE_INDEX.md`、日期、symbols、
+tags 和 `derived_from` 只是导航工具，不是读取许可或固定入口。
 
-Existing tracked notes are retained as historical work. New local notes remain
-ignored unless deliberately promoted elsewhere.
+使用这些材料时注意区分：
+
+- 当时观察到的事实；
+- 作者或 Agent 当时的判断；
+- 可以继续泛化的机制；
+- 需要回到原始来源刷新后才能用于当前 coverage 的 claim。
+
+旧笔记不要求统一改成 JSON 或补齐 front matter。新的 idea 也可以直接写自然 Markdown；
+只有当轻量 tags、链接或来源记录确实能帮助未来检索时才添加。
+
+本目录可以包含与组合、行为或决策有关的思考。它们不是公司基本面的 primary evidence，
+但在问题相关时不需要被程序隐藏。

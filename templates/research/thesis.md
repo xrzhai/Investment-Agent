@@ -1,46 +1,21 @@
-# SYMBOL — Fundamental Research Thesis
+# SYMBOL — 公司研究
 
-**Version:** vN  
-**Research as of:** YYYY-MM-DD  
-**Trigger:** initiate / earnings / material event / scheduled review
+**版本：** vN
 
-## Executive thesis
+**研究信息截至：** YYYY-MM-DD
 
-State the current claim, why it may be true and the most important uncertainty. Keep all account-specific information in decision or portfolio-review records.
+**估值参考日：** YYYY-MM-DD
 
-## Business and industry structure
+> 这只是一个空白起点。先读 `config/research-context.md` 和与公司有关的历史材料，
+> 然后采用最能解释这门生意的结构；可以删除本提示并自由写作。
 
-- Customer problem and value proposition
-- Revenue/profit engine
-- Competitive structure and durability
-- Capital intensity and reinvestment needs
+建议先回答最重要的问题：
 
-## Evidence-backed drivers
+- 客户为什么付钱，公司如何从价值池中持续取值？
+- 哪些优势是结构性的，哪些依赖持续优秀执行或周期性稀缺？
+- 哪些财务和经营证据真正支持或挑战这个解释？
+- 最强的反方是什么，还有什么没有理解？
+- 当前价格大致隐含什么，合理回报需要哪些假设成立？
 
-For each driver include claim, supporting fact IDs, counterevidence and monitoring metric.
-
-## Financial trajectory
-
-Use comparable periods and label reported facts, guidance, consensus and assumptions separately.
-
-## Valuation framework
-
-State valuation date, inputs, source IDs, scenario assumptions and sensitivity. Avoid false precision.
-
-## Risks and falsifiers
-
-Define observable conditions that weaken or invalidate the thesis.
-
-## Open questions
-
-List unresolved questions and the evidence required to answer them.
-
-## Evidence map
-
-| Material claim | Fact IDs | Source IDs | Evidence boundary |
-|---|---|---|---|
-
-## Version change log
-
-| Version | Date | Trigger | Material change |
-|---|---|---|---|
+可以写成文章、memo、问题驱动的分析或其他形式。事实尽量保留来源和日期；估值说明
+关键假设；账户仓位和动作在需要讨论组合时另行展开。

@@ -15,18 +15,6 @@ from harness.settings import HarnessPaths
 
 
 _SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,31}$")
-_PORTFOLIO_SECTION_RE = re.compile(
-    r"^(?:头寸管理|仓位管理|持仓管理|组合头寸|交易记录|账户盈亏|"
-    r"position\s+(?:management|sizing)|portfolio\s+(?:position|sizing|exposure)|p&l)",
-    re.IGNORECASE,
-)
-_PORTFOLIO_LINE_RE = re.compile(
-    r"持仓成本|买入成本|我的成本价|当前权重|目标权重|加仓条件|减仓条件|"
-    r"调仓说明要求|账户盈亏|浮盈|浮亏|我的持仓|本人持仓|"
-    r"\bcost basis\b|\b(?:unrealized|realized)\s+p&l\b|\bportfolio weight\b|"
-    r"\btarget weight\b|\bcurrent weight\b",
-    re.IGNORECASE,
-)
 
 
 class ResearchStore:
@@ -85,36 +73,6 @@ class ResearchStore:
             return None
         return path, path.read_text(encoding="utf-8")
 
-    @staticmethod
-    def thesis_research_view(text: str) -> tuple[str, int]:
-        """Strip account-specific sections while preserving research content."""
-
-        output: list[str] = []
-        skipped_level: int | None = None
-        removed_lines = 0
-        for line in text.splitlines():
-            heading = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
-            if heading:
-                level = len(heading.group(1))
-                title = heading.group(2).strip()
-                if skipped_level is not None and level <= skipped_level:
-                    skipped_level = None
-                if _PORTFOLIO_SECTION_RE.match(title):
-                    skipped_level = level
-                    removed_lines += 1
-                    continue
-            if skipped_level is not None:
-                removed_lines += 1
-                continue
-            if _PORTFOLIO_LINE_RE.search(line):
-                removed_lines += 1
-                continue
-            output.append(line)
-        research_view = "\n".join(output).strip() + "\n"
-        if removed_lines:
-            research_view += "\n[Portfolio-specific content omitted by the context policy.]\n"
-        return research_view, removed_lines
-
     def load_status(self, symbol: str) -> ResearchStatus:
         normalized = self.normalize_symbol(symbol)
         root = self.symbol_dir(normalized)
@@ -124,11 +82,13 @@ class ResearchStore:
 
         thesis = self.current_thesis_path(normalized)
         summary_path = "README.md" if (root / "README.md").exists() else "summary.md"
+        legacy_layout = thesis is not None or (root / "README.md").exists()
         return ResearchStatus(
             symbol=normalized,
             current_thesis=thesis.name if thesis else None,
             summary_path=summary_path,
-            legacy_layout=True,
+            coverage_stage="legacy" if legacy_layout else "building",
+            legacy_layout=legacy_layout,
         )
 
     def load_summary(self, symbol: str, status: ResearchStatus | None = None) -> tuple[Path | None, str]:
@@ -143,12 +103,6 @@ class ResearchStore:
             if path.exists() and path.is_file():
                 return path, path.read_text(encoding="utf-8")
         return None, ""
-
-    @staticmethod
-    def _bounded_legacy_summary(text: str, max_chars: int = 6000) -> str:
-        if len(text) <= max_chars:
-            return text
-        return text[:max_chars].rstrip() + "\n\n[Legacy thesis summary truncated by Harness]"
 
     def load_sources(self, symbol: str, status: ResearchStatus | None = None) -> list[SourceRecord]:
         status = status or self.load_status(symbol)
@@ -168,13 +122,16 @@ class ResearchStore:
         as_of: date | None = None,
         include_statuses: set[FactStatus] | None = None,
         include_other_symbols: bool = False,
-        limit: int = 100,
+        limit: int | None = None,
     ) -> list[FactRecord]:
         status = status or self.load_status(symbol)
         path = self.record_path(symbol, status.facts_path)
         if not path.exists():
             return []
-        wanted_tags = {tag.lower() for tag in tags or []}
+        def normalize_tag(value: str) -> str:
+            return re.sub(r"\s+", " ", re.sub(r"[_-]+", " ", value.strip().lower()))
+
+        wanted_tags = {normalize_tag(tag) for tag in tags or [] if tag.strip()}
         wanted_statuses = include_statuses or {FactStatus.active, FactStatus.disputed, FactStatus.unverified}
         candidates: list[FactRecord] = []
         for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
@@ -203,11 +160,20 @@ class ResearchStore:
             )
             if effective.status not in wanted_statuses:
                 continue
-            if wanted_tags and not wanted_tags.intersection(tag.lower() for tag in effective.tags):
-                continue
+            if wanted_tags:
+                record_tags = {normalize_tag(tag) for tag in effective.tags}
+                matched = any(
+                    wanted == actual
+                    or f" {actual} " in f" {wanted} "
+                    or f" {wanted} " in f" {actual} "
+                    for wanted in wanted_tags
+                    for actual in record_tags
+                )
+                if not matched:
+                    continue
             records.append(effective)
         records.sort(key=lambda item: item.recorded_at, reverse=True)
-        return records[:limit]
+        return records if limit is None else records[:limit]
 
     def add_source(self, symbol: str, source: SourceRecord) -> bool:
         """Add one source atomically; identical retries are idempotent."""
@@ -256,7 +222,6 @@ class ResearchStore:
             status=status,
             include_statuses=set(FactStatus),
             include_other_symbols=True,
-            limit=100000,
         )
         by_id = {item.fact_id: item for item in existing}
         if fact.fact_id in by_id:
@@ -312,6 +277,7 @@ class ResearchStore:
             payload = ResearchStatus(
                 symbol=normalized,
                 company_name=company_name,
+                coverage_stage="legacy" if thesis is not None else "building",
                 current_thesis=thesis.name if thesis else None,
                 summary_path="summary.md",
                 facts_path="facts.jsonl",
@@ -332,15 +298,25 @@ class ResearchStore:
 
         summary_path = root / "summary.md"
         if not summary_path.exists():
+            current_name = thesis.name if thesis else "not initiated"
+            stage = "Legacy migration required" if thesis else "Building"
             header = (
-                f"# {normalized} — Research Summary\n\n"
-                f"**Current thesis:** `{thesis.name if thesis else 'not initiated'}`  \n"
-                f"**Generated:** {datetime.now(timezone.utc).isoformat()}\n\n"
+                f"# {normalized} — 价值投资研究摘要\n\n"
+                f"**当前 Thesis：** `{current_name}`\n"
+                f"**覆盖状态：** {stage}\n"
+                "**估值状态：** Missing\n"
+                f"**生成时间：** {datetime.now(timezone.utc).isoformat()}\n\n"
             )
             summary_path.write_text(
                 header
-                + "## Current view\n\n[Agent: write a bounded, portfolio-free summary from sourced research.]\n\n"
-                + "## Active evidence gaps\n\n- Not yet migrated.\n",
+                + "## 当前理解\n\n"
+                + "[Agent：自由概括这门生意、价值来源、价格隐含预期和最大疑点。]\n\n"
+                + "## 最重要的依据\n\n"
+                + "- 尚未完成结构化迁移；请只保留最能支持或挑战判断的证据。\n\n"
+                + "## 估值读法\n\n"
+                + "[Agent：选择适合该公司的方法，说明日期、区间和敏感假设。]\n\n"
+                + "## 下一步\n\n"
+                + "[Agent：写下一项最可能改变判断的证据或问题。]\n",
                 encoding="utf-8",
             )
             created.append(summary_path)
@@ -379,7 +355,35 @@ class ResearchStore:
         if status.current_thesis and current and status.current_thesis != current.name:
             issues.append(ValidationIssue(code="research.status_pointer_mismatch", severity=Severity.error, message="status.json and current.md point to different thesis versions", path=str(root / "status.json")))
         if status.legacy_layout:
-            issues.append(ValidationIssue(code="research.legacy_layout", severity=Severity.info, message="structured status/facts/sources scaffold has not been created", path=str(root)))
+            issues.append(ValidationIssue(code="research.legacy_layout", severity=Severity.info, message="structured research migration is incomplete; legacy coverage remains the active fallback", path=str(root)))
+        else:
+            if status.valuation_status not in {"current", "stale", "missing"}:
+                issues.append(
+                    ValidationIssue(
+                        code="research.valuation_status_invalid",
+                        severity=Severity.warning,
+                        message=f"unknown valuation_status: {status.valuation_status!r}",
+                        path=str(root / "status.json"),
+                    )
+                )
+            elif status.valuation_status != "current":
+                issues.append(
+                    ValidationIssue(
+                        code="research.valuation_not_current",
+                        severity=Severity.warning,
+                        message=f"active coverage valuation is {status.valuation_status}; refresh dated market and estimate inputs before a valuation-dependent decision",
+                        path=str(root / "status.json"),
+                    )
+                )
+            elif status.valuation_as_of is None:
+                issues.append(
+                    ValidationIssue(
+                        code="research.valuation_date_missing",
+                        severity=Severity.warning,
+                        message="valuation_status is current but valuation_as_of is missing; treat freshness as uncertain",
+                        path=str(root / "status.json"),
+                    )
+                )
 
         try:
             sources = self.load_sources(normalized, status)
@@ -403,7 +407,6 @@ class ResearchStore:
                 status=status,
                 include_statuses=set(FactStatus),
                 include_other_symbols=True,
-                limit=100000,
             )
         except ValueError as exc:
             issues.append(ValidationIssue(code="research.facts_invalid", severity=Severity.error, message=str(exc), path=str(root / status.facts_path)))

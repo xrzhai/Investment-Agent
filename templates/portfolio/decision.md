@@ -1,26 +1,30 @@
-# Position Decision — SYMBOL — YYYY-MM-DD
+# 仓位决策 — SYMBOL — YYYY-MM-DD
 
-**Decision ID:**  
-**Status:** draft / approved / expired / superseded  
-**Research as of:**  
-**Portfolio state as of:**  
-**Thesis version:**
+**决策 ID：**
 
-## Research evidence
+**状态：** `draft` / `approved` / `expired` / `superseded`
 
-## Portfolio constraints
+**研究信息截至：**
 
-## Decision
+**组合状态截至：**
 
-- Action:
-- Size boundary:
-- Price/condition boundary:
-- Valid until:
+**Thesis 版本：**
 
-## Disconfirming evidence
+## 研究证据
 
-## Alternatives considered
+## 组合约束
 
-## Execution gate
+## 决策
 
-This document is a decision record, not evidence of execution.
+- 动作：
+- 规模边界：
+- 价格/条件边界：
+- 有效期：
+
+## 会推翻决策的证据
+
+## 考虑过的替代方案
+
+## 执行边界
+
+本文档只是 decision record，不代表交易已经执行。

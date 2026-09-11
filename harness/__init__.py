@@ -1,17 +1,17 @@
-"""Deterministic core for the Investment Research Harness.
+"""Optional deterministic helpers for the Investment Research Harness.
 
-The package intentionally contains no LLM client and no product CLI. External
-agents import these functions or use a thin environment-specific adapter.
+Research agents can read the repository's Markdown directly.  This package is
+only for structured research records and portfolio operations that benefit
+from deterministic code.
+
+No umbrella API class: import the submodules you need
+(``harness.portfolio.*`` for portfolio transactions/valuation,
+``harness.settings`` for path discovery) or just read the repository's
+Markdown and JSONL files.
 """
 
-from harness.context import ContextRequest, ContextRouter, ContextTask
-from harness.api import InvestmentHarness
 from harness.settings import HarnessPaths
 
 __all__ = [
-    "ContextRequest",
-    "ContextRouter",
-    "ContextTask",
     "HarnessPaths",
-    "InvestmentHarness",
 ]

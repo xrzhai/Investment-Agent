@@ -19,6 +19,7 @@ portfolio.db
 models_dump.json
 nul
 .coverage
+.firecrawl/
 htmlcov/
 
 # Database
@@ -38,10 +39,7 @@ coverage/*/**
 coverage/COVERAGE_LOG.md
 !coverage/ASSET_CONVENTION.md
 
-# Private benchmark / evaluation material
-docs/benchmark_v2/**
-
-# Unstructured notes are never loaded by the context router
+# Private research notes
 research_notes/**
 !research_notes/README.md
 

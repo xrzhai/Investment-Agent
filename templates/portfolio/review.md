@@ -1,22 +1,24 @@
-# Portfolio Review — YYYY-MM-DD
+# 组合复盘 — YYYY-MM-DD
 
-**State as of:**  
-**Quote/data quality:**  
-**Previous review:**
+**组合状态截至：**
 
-## Exposure and liquidity
+**报价/数据质量：**
 
-## Policy signals
+**上次 Review：**
 
-## Research freshness
+## 敞口与流动性
 
-| Symbol | Weight | Thesis version | Last reviewed | IC status | Next trigger |
-|---|---:|---|---|---|---|
+## 策略信号
 
-## Attention queue
+## 研究时效
 
-Rank by evidence and risk urgency, not daily P&L.
+| Symbol | 权重 | Thesis 版本 | 上次 Review | 下次触发条件 |
+|---|---:|---|---|---|
 
-## Next actions
+## 关注队列
 
-No trade is implied unless a separate approved decision exists.
+按证据与风险紧迫度排序，不按单日盈亏排序。
+
+## 下一步动作
+
+除非另有一份已批准的 decision，否则本文档不代表需要交易。

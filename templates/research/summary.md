@@ -1,25 +1,12 @@
-# SYMBOL — Research Summary
+# SYMBOL — 研究导航
 
-**Current thesis:** `vN_YYYY-MM-DD.md`  
-**Research as of:** YYYY-MM-DD  
-**Status:** Active / Watch / Paused / Closed
+**当前 Thesis：** `vN_YYYY-MM-DD.md`
 
-## Current view
+**研究信息截至：** YYYY-MM-DD
 
-One bounded paragraph describing what the company is, why it may matter and the present evidence boundary.
+**估值参考日：** YYYY-MM-DD / `stale` / `missing`
 
-## Active drivers
+用几段话记录下一位 Agent 最值得先知道的判断、最强依据或反方、当前估值读法，以及
+下一项可能改变判断的问题。结构和长度按实际需要决定。
 
-- Driver — supporting fact IDs.
-
-## Falsifiers and watch items
-
-- Condition — current state — next observable evidence.
-
-## Evidence gaps
-
-- Missing or conflicting evidence.
-
-## Next review trigger
-
-Specific event, filing, metric or date.
+这是进入完整研究的地图，不是完整 thesis 的替代品。

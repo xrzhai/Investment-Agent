@@ -1,61 +1,36 @@
-# Context Policy
+# 上下文使用指南
 
-## Objective
+## 基本立场
 
-Minimize context contamination while retaining enough evidence to perform the task correctly.
+上下文由 Agent 根据问题选择和扩展。仓库提供地图、思想背景和历史材料，但不设置
+字符预算、fact 数量预算、固定层级或强制停止点。
 
-## Context layers
+## 可用入口
 
-| Layer | Content | Default use |
-|---|---|---|
-| L0 | AGENTS, contracts, selected workflow | Every task |
-| L1 | symbol status and bounded summary | Symbol and portfolio tasks |
-| L2 | active structured facts and source metadata | Research and decision tasks |
-| L3 | current thesis | Update, thesis review, single-symbol decision |
-| L4 | targeted source excerpts | Verification only |
-| L5 | archives, old reviews, old thesis versions | Explicit historical comparison only |
+- `config/research-context.md`：用户的价值投资思考；
+- `coverage/{SYMBOL}/`：当前 thesis、摘要、事实、来源和历史版本；
+- `research_notes/`：探索性笔记、专题研究和跨公司 idea；
+- `reviews/`：组合决策、执行、复盘和行为历史；
+- `config/principles.md` 与 Portfolio 数据：组合约束和当前状态。
 
-Load layers in order and stop when the task is supported. Never load L5 pre-emptively.
+`summary.md`、status、indexes 和 tags 用于导航，不是权限清单。Agent 可以从它们开始，
+也可以直接阅读用户点名的文档或在研究中发现的相关原文。
 
-Legacy theses may contain old position-management sections. The context router
-must expose a research-only view with those sections removed; the original file
-remains immutable until a deliberate thesis migration creates a clean version.
+## 探索方式
 
-## Domain isolation
+- 先理解问题，再用 `rg`、链接、日期、symbol 和 tags 寻找材料；
+- 发现重要线索时可以扩大范围、跨公司比较、追溯旧版本或核验 source docs；
+- 上下文很大时分批阅读并保留工作摘要，而不是截断原文；
+- 需要引用或改变当前判断时，回到原始来源核验；
+- 历史观点可以启发研究，但要区分“当时怎么想”和“现在能证明什么”。
 
-### Research-only tasks
+无目的地递归读取整个大型目录通常效率不高，但这只是搜索建议，不是禁令。
 
-Exclude quantity, cost basis, P&L, position weight and prior trade rationale. These values create anchoring and disposition-effect risk without improving the fundamental claim.
+## Research 与 Portfolio
 
-### Portfolio review
+纯公司研究通常先从商业模式、财务和公开估值形成独立判断，避免被个人成本或盈亏
+锚定。仓位决策和组合复盘则可以主动引入数量、权重、现金、期权和历史动作。
 
-Load portfolio state and per-symbol bounded summaries. Do not load every full thesis. Escalate only flagged symbols to a separate thesis-review task.
-
-### Decision
-
-Load exactly one symbol's current thesis and relevant facts, then add portfolio constraints. Keep the two evidence sections separate in the output.
-
-## Bounded read models
-
-`status.json` and `summary.md` are the default cross-task read models. A summary should normally remain below 1,500 Chinese characters or 1,000 English words and include:
-
-- current thesis in one paragraph;
-- thesis version and as-of date;
-- 3-5 active drivers;
-- 3-5 falsifiers or watch items;
-- material evidence gaps;
-- next review trigger.
-
-It must not copy the complete source pack or historical narrative.
-
-## Contamination markers
-
-An artifact is contaminated when it:
-
-- uses an old thesis as if current;
-- treats a prior Agent conclusion as source evidence;
-- mixes cost/P&L into a fundamental conclusion;
-- uses facts published after the stated as-of date;
-- combines two companies without an explicit comparison task;
-- hides conflicting definitions or periods;
-- cites a source document that was not actually inspected.
+这是思考顺序和写作边界，不由程序删除词句或禁止读取文件。若历史 thesis 同时包含
+研究与仓位内容，Agent 应理解原文并在新产物中按当前任务重新组织，而不是让正则表达式
+裁掉段落。

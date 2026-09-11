@@ -215,6 +215,16 @@ class SnapshotRecord(BaseModel):
 class CashflowRecord(BaseModel):
     id: int | None = None
     event_date: date
+    # Backward-compatible alias for the event-time base-currency amount.
     amount_usd: float
+    amount_local: float | None = None
+    currency: str = "USD"
+    amount_base: float | None = None
+    fx_rate_to_base: float | None = None
+    fx_as_of: datetime | None = None
+    fx_source: str | None = None
+    fx_status: str = "legacy"
+    flow_scope: str = "external"
+    flow_type: str = "deposit"
     description: str = ""
     created_at: datetime | None = None

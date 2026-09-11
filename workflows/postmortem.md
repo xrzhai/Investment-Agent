@@ -1,18 +1,18 @@
-# Postmortem
+# 过程复盘
 
-## Goal
+## 目标
 
-Capture an avoidable Agent, data or workflow failure so it can be checked in future tasks.
+记录一次本可避免的 Agent、数据或 workflow 失败，使未来任务能够识别并检查同类问题。
 
-## Record
+## 记录内容
 
-- affected task and artifact;
-- observable failure;
-- impact;
-- root cause;
-- violated contract;
-- prevention rule;
-- future trigger check;
-- human review status.
+- 受影响的 task 和 artifact；
+- 可观察到的失败；
+- 影响；
+- 根本原因；
+- 哪些假设、工具或约定造成了问题；
+- 值得保留的经验或可选提醒；
+- 未来遇到类似情形时如何识别；
+- 人工复核状态。
 
-Postmortems are not investment theses and do not decide whether a position was good or bad using hindsight.
+Postmortem 不是投资 thesis，也不能用事后信息判断某个仓位当初是好是坏。

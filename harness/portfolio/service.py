@@ -238,11 +238,19 @@ class PortfolioService:
         previous = next((item for item in reversed(snapshots) if item.snapshot_date < day), None)
         daily_return = 0.0
         if previous and previous.total_value:
-            flows = sum(
-                flow.amount_usd
+            period_flows = [
+                flow
                 for flow in cashflows
                 if previous.snapshot_date < flow.event_date <= day
-            )
+                and flow.flow_scope == "external"
+            ]
+            missing_base = [str(flow.id or flow.event_date) for flow in period_flows if flow.amount_base is None]
+            if missing_base:
+                raise ValueError(
+                    "cashflow TWR adjustment requires event-time base amounts; "
+                    f"missing for {', '.join(missing_base)}"
+                )
+            flows = sum(flow.amount_base for flow in period_flows)
             daily_return = ((state.total_value - flows) / previous.total_value - 1) * 100
 
         history = [

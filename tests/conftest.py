@@ -74,11 +74,31 @@ def create_research_record(root: Path, symbol: str = "ABC", summary: str = "Evid
 
 @pytest.fixture
 def harness_root(tmp_path: Path) -> Path:
-    for directory in ("coverage", "reviews", "data", "config"):
+    for directory in ("coverage", "reviews", "data", "config", "research_notes"):
         (tmp_path / directory).mkdir()
     create_research_record(tmp_path)
     (tmp_path / "config" / "profile.json").write_text(
         json.dumps({"max_position_weight": 0.25, "min_cash_pct": 0.05}),
+        encoding="utf-8",
+    )
+    (tmp_path / "config" / "research-context.md").write_text(
+        "# Research Context\n\nUnderstand the business before selecting evidence.",
+        encoding="utf-8",
+    )
+    (tmp_path / "config" / "principles.md").write_text(
+        "# Investment Principles\n\nValuation and portfolio constraints are separate lenses.",
+        encoding="utf-8",
+    )
+    (tmp_path / "research_notes" / "KNOWLEDGE_INDEX.md").write_text(
+        "# Knowledge Index\n\n| path | tags |\n|---|---|\n| research_notes/example.md | business-model |",
+        encoding="utf-8",
+    )
+    (tmp_path / "coverage" / "COVERAGE_LOG.md").write_text(
+        "# Coverage Index\n\n| symbol | current |\n|---|---|\n| ABC | thesis-2026-08-01.md |",
+        encoding="utf-8",
+    )
+    (tmp_path / "reviews" / "REVIEWS_LOG.md").write_text(
+        "# Reviews Index\n\nHistorical decisions; not research evidence.",
         encoding="utf-8",
     )
     return tmp_path

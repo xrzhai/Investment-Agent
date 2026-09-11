@@ -17,7 +17,7 @@ def test_structured_fact_keeps_source_lineage(harness_paths):
 
     assert fact.source_ids == [source.source_id]
     assert source.primary is True
-    assert store.validate_symbol("ABC") == []
+    assert not any(issue.severity.value == "error" for issue in store.validate_symbol("ABC"))
 
 
 def test_unsafe_record_path_is_rejected(harness_paths):
@@ -91,9 +91,12 @@ def test_scaffolding_legacy_thesis_does_not_claim_migration_complete(harness_pat
 
     ResearchStore(harness_paths).ensure_scaffold("LEG")
     status = ResearchStore(harness_paths).load_status("LEG")
+    summary = (symbol_dir / "summary.md").read_text(encoding="utf-8")
 
     assert status.legacy_layout is True
-    assert "write a bounded" in (symbol_dir / "summary.md").read_text(encoding="utf-8")
+    assert "当前理解" in summary
+    assert "估值读法" in summary
+    assert "尚未完成结构化迁移" in summary
 
 
 def test_historical_context_filters_by_information_availability(harness_paths):

@@ -1,6 +1,6 @@
-# Coverage Asset Convention
+# 公司研究视觉资产约定
 
-适用范围：`coverage/{SYMBOL}/` 下的图表、图片、HTML artifact。
+适用范围：`coverage/{SYMBOL}/` 下的图表、图片和 HTML artifact。
 
 目标：
 - `md` 是主入口
@@ -19,11 +19,10 @@ coverage/{SYMBOL}/
       annual-trends.png
       quarterly-trends.png
       valuation-snapshot.png
-      price-position.png
       dashboard.html
     archive/
       YYYY-MM-DD/
-        ...same files
+      ...同名文件
 ```
 
 含义：
@@ -33,7 +32,7 @@ coverage/{SYMBOL}/
 ## 默认规则
 
 1. markdown 永远引用 `assets/current/`
-   - 例：`![Valuation](assets/current/valuation-snapshot.png)`
+   - 例：`![估值](assets/current/valuation-snapshot.png)`
 2. 新图默认覆盖 `current/` 中同名文件
 3. 只有重要财报 / thesis 明显变化 / 对外输出时，才复制到 `archive/YYYY-MM-DD/`
 4. 不在 `current/` 文件名里加版本号
@@ -46,22 +45,14 @@ coverage/{SYMBOL}/
 | `annual-trends.png` | 3-5 年趋势 |
 | `quarterly-trends.png` | 4-6 季趋势 |
 | `valuation-snapshot.png` | 估值与目标区间 |
-| `price-position.png` | 价格、均线、thesis 区间 |
 | `dashboard.html` | 可选的交互页 |
 
 规则：
 - 全部小写
-- kebab-case
-- 版本信息放在 archive 目录，不放在 current 文件名
+- 使用 kebab-case
+- 版本信息放在 `archive/` 目录，不放在 `current/` 文件名
 
-## 轻量默认集
+## 是否需要图
 
-默认优先级：
-1. 先给 `overview.png` 或 `valuation-snapshot.png`
-2. 讲趋势时，再补 `annual-trends.png` 或 `quarterly-trends.png`
-3. 讲价格位置时，再补 `price-position.png`
-
-也就是：
-- 默认 1 张图起步
-- 常见情况 1-2 张图就够
-- 不默认一次性生成完整图包
+图表不是 coverage 的必需品。只有当它能明显帮助理解商业机制、长期财务趋势或估值时
+才创建；数量和形式由研究问题决定，不默认生成完整图包。

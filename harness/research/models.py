@@ -98,8 +98,11 @@ class ResearchStatus(BaseModel):
     symbol: str
     company_name: str = ""
     research_state: ResearchState = ResearchState.active
+    coverage_stage: str = "building"
     current_thesis: str | None = None
     thesis_as_of: date | None = None
+    valuation_status: str = "missing"
+    valuation_as_of: date | None = None
     summary_path: str = "summary.md"
     facts_path: str = "facts.jsonl"
     sources_path: str = "sources.json"
@@ -108,7 +111,6 @@ class ResearchStatus(BaseModel):
     next_review_trigger: str = ""
     active_topics: list[str] = Field(default_factory=list)
     evidence_gaps: list[str] = Field(default_factory=list)
-    ic_status: str = "UNVERIFIABLE"
     legacy_layout: bool = False
 
 

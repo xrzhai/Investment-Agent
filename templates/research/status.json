@@ -3,8 +3,11 @@
   "symbol": "SYMBOL",
   "company_name": "",
   "research_state": "active",
+  "coverage_stage": "building",
   "current_thesis": "v1_YYYY-MM-DD.md",
   "thesis_as_of": "YYYY-MM-DD",
+  "valuation_status": "missing",
+  "valuation_as_of": null,
   "summary_path": "summary.md",
   "facts_path": "facts.jsonl",
   "sources_path": "sources.json",
@@ -12,6 +15,5 @@
   "last_reviewed_at": null,
   "next_review_trigger": "",
   "active_topics": [],
-  "evidence_gaps": [],
-  "ic_status": "UNVERIFIABLE"
+  "evidence_gaps": []
 }

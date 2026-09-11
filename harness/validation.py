@@ -1,22 +1,11 @@
 from __future__ import annotations
 
-import re
 import sqlite3
 from pathlib import Path
 
 from harness.models import Severity, ValidationIssue, ValidationReport
 from harness.research.store import ResearchStore
 from harness.settings import HarnessPaths
-
-
-_PORTFOLIO_MARKERS = {
-    "持仓成本": re.compile(r"持仓成本|买入成本|我的成本价"),
-    "账户盈亏": re.compile(r"浮盈|浮亏|账户盈亏"),
-    "个人仓位": re.compile(r"我的持仓|本人持仓|当前仓位\s*[:：]?\s*\d"),
-    "cost basis": re.compile(r"\bcost basis\b", re.IGNORECASE),
-    "portfolio P&L": re.compile(r"\b(?:unrealized|realized)\s+p&l\b", re.IGNORECASE),
-    "portfolio weight": re.compile(r"\bportfolio weight\b", re.IGNORECASE),
-}
 
 
 def validate_workspace(root: str | Path | None = None) -> ValidationReport:
@@ -27,56 +16,8 @@ def validate_workspace(root: str | Path | None = None) -> ValidationReport:
     issues: list[ValidationIssue] = []
     for symbol in research.list_symbols():
         issues.extend(research.validate_symbol(symbol))
-        issues.extend(_validate_context_separation(research, symbol))
     issues.extend(_validate_portfolio_db(paths.portfolio_db))
     return ValidationReport(issues=issues)
-
-
-def _validate_context_separation(research: ResearchStore, symbol: str) -> list[ValidationIssue]:
-    issues: list[ValidationIssue] = []
-    try:
-        status = research.load_status(symbol)
-    except (ValueError, OSError):
-        return issues
-    if status.legacy_layout:
-        thesis = research.load_current_thesis(symbol)
-        if thesis:
-            path, text = thesis
-            _, removed_lines = research.thesis_research_view(text)
-            if removed_lines:
-                issues.append(
-                    ValidationIssue(
-                        code="context.legacy_thesis_needs_separation",
-                        severity=Severity.warning,
-                        message=f"legacy thesis contains {removed_lines} portfolio-specific lines; context routing will omit them until the thesis is migrated",
-                        path=str(path),
-                    )
-                )
-        return issues
-
-    candidates: list[Path] = []
-    try:
-        candidates.append(research.record_path(symbol, status.summary_path))
-        if status.current_thesis:
-            candidates.append(research.record_path(symbol, status.current_thesis))
-    except ValueError:
-        return issues
-
-    for path in candidates:
-        if not path.exists() or not path.is_file():
-            continue
-        text = path.read_text(encoding="utf-8")
-        matches = [label for label, pattern in _PORTFOLIO_MARKERS.items() if pattern.search(text)]
-        if matches:
-            issues.append(
-                ValidationIssue(
-                    code="context.portfolio_fact_in_research",
-                    severity=Severity.error,
-                    message=f"research artifact contains portfolio-specific markers: {', '.join(matches)}",
-                    path=str(path),
-                )
-            )
-    return issues
 
 
 def _validate_portfolio_db(db_path: Path) -> list[ValidationIssue]:
