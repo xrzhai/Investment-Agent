@@ -1,23 +1,27 @@
-# Licensing Overview
+# 许可证说明
 
-This repository uses a dual non-commercial licensing model.
+本仓库采用双重非商业许可模式。
 
-1. Software / code
-- License: PolyForm Noncommercial 1.0.0
-- Full text: `LICENSE`
-- Intended scope: source code, scripts, CLI/tooling, and software implementation files in this repository
+## 1. 软件与代码
 
-2. Documentation / content
-- License: Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
-- Full text: `LICENSE-docs`
-- Intended scope: `README.md`, docs, workflow documents, prompts, templates, and other repository content that is primarily documentation or written material
+- 许可证：PolyForm Noncommercial 1.0.0
+- 完整文本：`LICENSE`
+- 适用范围：本仓库中的源代码、脚本、CLI/tooling 和软件实现文件
 
-Interpretation guide:
-- If a file is clearly software code, treat it as covered by PolyForm Noncommercial 1.0.0.
-- If a file is clearly documentation, notes, prompts, or templates, treat it as covered by CC BY-NC 4.0.
-- If a file or subdirectory includes its own license notice, that more specific notice controls for that material.
-- Third-party dependencies and externally sourced materials keep their own licenses.
+## 2. 文档与内容
 
-In short:
-- You are welcome to study, use, modify, fork, and contribute to this project for non-commercial purposes.
-- Commercial use is not granted by these default repository licenses.
+- 许可证：Creative Commons Attribution-NonCommercial 4.0 International（CC BY-NC 4.0）
+- 完整文本：`LICENSE-docs`
+- 适用范围：`README.md`、docs、workflow 文档、prompts、templates，以及其他主要属于文档或文字材料的仓库内容
+
+## 如何判断
+
+- 明确属于软件代码的文件，按 PolyForm Noncommercial 1.0.0 处理；
+- 明确属于文档、笔记、prompt 或 template 的文件，按 CC BY-NC 4.0 处理；
+- 如果某个文件或子目录另有更具体的许可证声明，以该声明为准；
+- 第三方依赖和外部来源材料继续适用其各自许可证。
+
+简要来说：
+
+- 欢迎出于非商业目的研究、使用、修改、fork 和贡献本项目；
+- 上述默认许可证不授予商业使用权。
