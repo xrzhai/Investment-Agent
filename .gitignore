@@ -54,3 +54,7 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# IDE/workspace noise & scratch artifacts (2026-09-19)
+.obsidian/
+tmp/
