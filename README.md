@@ -84,10 +84,9 @@ report = service.refresh_quotes()  # 拉价 + 落库（日常直接跑 scripts/r
 
 ## 隐私
 
-真实数据库与组合记录（`data/`、`reviews/**`、含成本价的组合文件）只存在于本地，
-由 `.gitignore` 排除；组合事实的权威来源是本地 `data/investment.db`。公开仓库只
-包含可分享的指南、工具和空目录骨架，以及公司 coverage 等
-公开市场研究正文。
+真实数据库与组合记录（`data/`、`reviews/**`、`coverage/`）、含成本价的组合文件
+只存在于本地，由 `.gitignore` 排除；组合事实的权威来源是本地 `data/investment.db`。
+公开仓库只包含可分享的指南、工具和空目录骨架。
 
 ## 许可证
 
