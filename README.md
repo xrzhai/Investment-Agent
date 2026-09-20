@@ -84,8 +84,23 @@ report = service.refresh_quotes()  # 拉价 + 落库（日常直接跑 scripts/r
 
 ## 隐私
 
-真实数据库、coverage 正文、来源文件和 reviews 默认保留在本地，并由 `.gitignore`
-排除。公开仓库只保留可分享的指南、工具和空目录骨架。
+**私有数据不进 git，这是本仓库的硬边界。** 真实数据库（`data/investment.db`）、
+决策与复盘（`reviews/decisions/`、`reviews/REVIEWS_LOG.md`、组合 review）、
+含成本价的组合文件（如任何 `portfolio*.csv`）只存在于本地机器。
+
+- `.gitignore` 对 `reviews/**`、`data/` 等做了排除；新增含持仓金额、股数、成本、
+  期权信息或个人身份的文件前，先确认该路径是否被 ignore；
+- 组合事务的唯一权威是本地 `data/investment.db`（见 `reviews/LEDGER_CUTOVER.md`），
+  Markdown 记录只是解释层，两者的记录互不依赖 git 历史存活；
+- 历史上曾发生“私有文件被 commit + revert 连坐/或恢复时误推”的事故（2026-09-20 已用
+  git filter-repo 清理）。任何涉及 git 历史改写、checkout 恢复私有路径的操作，
+  都必须先 `git check-ignore` 确认目标路径不会被重新跟踪。
+- 公司 coverage 正文含市值/估值等公开市场信息，可进 git；但“我own多少、成本多少、
+  浮盈多少”的组合事实永远不进。写新文档时按这条线划分内外。
+
+公开仓库只保留可分享的指南、工具和空目录骨架。若误提交了上述私有数据，
+不做“软删除 + 新 commit”，而是用 `git filter-repo --invert-paths` 从全部历史
+抹除后 force push，并验证旧 commit URL 返回 404。
 
 ## 许可证
 
