@@ -6,17 +6,28 @@ from harness.portfolio.store import PortfolioStore
 from harness.validation import validate_workspace
 
 
-def test_validation_accepts_structured_research(harness_paths):
+def test_validation_accepts_single_line_current_pointer(harness_paths):
     PortfolioStore(paths=harness_paths).ensure_schema()
 
     report = validate_workspace(harness_paths.root)
 
-    assert not any(issue.code.startswith("research.") and issue.severity == "error" for issue in report.issues)
+    assert not any(issue.code.startswith("research.") for issue in report.issues)
+
+
+def test_validation_flags_multi_line_or_missing_current_pointer(harness_paths):
+    (harness_paths.coverage / "ABC" / "current.md").write_text("# Navigation\n\n- [thesis](thesis-2026-08-01.md)", encoding="utf-8")
+    (harness_paths.coverage / "XYZ").mkdir()
+    (harness_paths.coverage / "XYZ" / "current.md").write_text("missing.md", encoding="utf-8")
+
+    report = validate_workspace(harness_paths.root)
+    flagged = {issue.path.replace("\\", "/").split("/")[-2] for issue in report.issues if issue.code == "research.current_pointer_invalid"}
+
+    assert flagged == {"ABC", "XYZ"}
 
 
 def test_workspace_validation_does_not_migrate_legacy_database(tmp_path):
-    data = tmp_path / "data"
-    data.mkdir()
+    data = tmp_path / "portfolio" / "data"
+    data.mkdir(parents=True)
     db_path = data / "investment.db"
     connection = sqlite3.connect(db_path)
     connection.executescript(

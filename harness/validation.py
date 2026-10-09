@@ -4,20 +4,38 @@ import sqlite3
 from pathlib import Path
 
 from harness.models import Severity, ValidationIssue, ValidationReport
-from harness.research.store import ResearchStore
 from harness.settings import HarnessPaths
 
 
 def validate_workspace(root: str | Path | None = None) -> ValidationReport:
-    """Run read-only structural checks across research and portfolio domains."""
+    """Run read-only checks: coverage version pointers and the portfolio ledger."""
 
     paths = HarnessPaths.discover(root)
-    research = ResearchStore(paths)
-    issues: list[ValidationIssue] = []
-    for symbol in research.list_symbols():
-        issues.extend(research.validate_symbol(symbol))
+    issues = _validate_current_pointers(paths.coverage)
     issues.extend(_validate_portfolio_db(paths.portfolio_db))
     return ValidationReport(issues=issues)
+
+
+def _validate_current_pointers(coverage: Path) -> list[ValidationIssue]:
+    """Each coverage/{SYMBOL}/current.md must name one thesis file in that directory."""
+
+    issues: list[ValidationIssue] = []
+    if not coverage.exists():
+        return issues
+    for symbol_dir in sorted(p for p in coverage.iterdir() if p.is_dir()):
+        pointer = symbol_dir / "current.md"
+        lines = [line.strip() for line in pointer.read_text(encoding="utf-8").splitlines() if line.strip()] if pointer.exists() else []
+        target = lines[0] if len(lines) == 1 else ""
+        if not target or Path(target).name != target or not (symbol_dir / target).is_file():
+            issues.append(
+                ValidationIssue(
+                    code="research.current_pointer_invalid",
+                    severity=Severity.error,
+                    message=f"{symbol_dir.name}/current.md must contain a single thesis filename that exists in the same directory",
+                    path=str(pointer),
+                )
+            )
+    return issues
 
 
 def _validate_portfolio_db(db_path: Path) -> list[ValidationIssue]:

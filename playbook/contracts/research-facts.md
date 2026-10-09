@@ -1,5 +1,7 @@
 # 研究事实与来源约定
 
+> **状态（2026-10-09）：** `status.json` 已退役，其中的复核触发与证据缺口迁入各公司 `tracking.md`。已有的 `facts.jsonl`、`sources.json` 冻结保留，Agent 可以直接作为文本阅读；不再维护写入与校验代码，新研究也不要求补充。本文件保留为这些历史记录的格式说明；确有跨任务复用价值时，新记录仍可按此格式手写。
+
 ## 先决定是否需要结构化
 
 Markdown 可以直接承载研究。探索性笔记、公司理解、类比、反方观点和未完成想法，
@@ -8,13 +10,13 @@ Markdown 可以直接承载研究。探索性笔记、公司理解、类比、�
 当一条信息需要跨任务复用、按日期筛选、追踪更新或反复核验时，可以使用：
 
 ```text
-coverage/{SYMBOL}/
-├─ current.md          # 当前 thesis 指针，可选但推荐
+research/coverage/{SYMBOL}/
+├─ current.md          # 唯一的当前版本指针（一行正文文件名）
 ├─ vN_YYYY-MM-DD.md    # 版本化 thesis
 ├─ summary.md          # 导航摘要，可选
-├─ status.json         # 当前状态，可选
-├─ facts.jsonl         # 值得复用的原子事实，可选
-├─ sources.json        # 与 facts 对应的来源登记，可选
+├─ tracking.md         # 持续验证点与复核触发，可选
+├─ facts.jsonl         # 冻结的原子事实记录（仅部分公司有）
+├─ sources.json        # 与 facts 对应的来源登记（仅部分公司有）
 └─ source_docs/        # 本地来源材料，可选
 ```
 

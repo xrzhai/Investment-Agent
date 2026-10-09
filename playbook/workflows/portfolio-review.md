@@ -11,7 +11,7 @@
 - 来自 `harness.portfolio` 的当前组合状态；
 - investor profile 和策略规则；
 - 未关闭的期权敞口；
-- 每个持仓 symbol 的研究导航 summary/status；
+- 每个持仓 symbol 的研究导航（summary，当前正文以 `current.md` 为准）；
 - 自上次 review 以来的近期 portfolio events。
 
 摘要适合快速建立全局视图。某个 symbol 的风险或机会影响组合判断时，可以继续阅读完整
@@ -19,9 +19,9 @@ thesis、历史记录或 source documents，不需要另一个流程批准。
 
 ## 步骤
 
-1. 检查 quote freshness，以及缺失的 FX/price 输入；
+1. 用 `python scripts/refresh_quotes.py` 刷新报价；估值完整且拉取无报错时，它会自动记录当日快照（同日重跑覆盖）。这是唯一的报价写库入口，不自行编写抓取代码写库。检查 quote freshness，以及缺失的 FX/price 输入；
 2. 计算权重、现金、或有期权敞口和策略信号；
-3. 把每个持仓与研究状态连接：thesis version、last review、IC state、next trigger 和 evidence gaps；
+3. 把每个持仓与研究状态连接：当前正文（`current.md`）、研究与估值时点、next trigger 和 evidence gaps；
 4. 按证据/风险紧迫度排列关注事项，而不是按单日盈亏；
 5. 对真正影响组合的 symbol 继续深入研究。
 

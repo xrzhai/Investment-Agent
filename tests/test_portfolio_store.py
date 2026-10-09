@@ -26,7 +26,7 @@ def test_trade_requires_decision_and_updates_cash_atomically(tmp_path):
         side="buy",
         quantity=10,
         price=100,
-        decision_ref="reviews/decisions/ABC-2026-08-03.md",
+        decision_ref="portfolio/decisions/ABC-2026-08-03.md",
         execution_ref="broker-trade-1",
     )
 
@@ -40,7 +40,7 @@ def test_trade_requires_decision_and_updates_cash_atomically(tmp_path):
             side="buy",
             quantity=10,
             price=100,
-            decision_ref="reviews/decisions/ABC-2026-08-03.md",
+            decision_ref="portfolio/decisions/ABC-2026-08-03.md",
             execution_ref="broker-trade-1",
         )
     assert store.get_position("ABC").quantity == 20
@@ -67,7 +67,12 @@ def test_insufficient_cash_rolls_back_trade(tmp_path):
 
 def test_short_put_assignment_updates_contract_position_and_cash(tmp_path):
     store = PortfolioStore(db_path=tmp_path / "portfolio.db")
-    store.set_position_baseline(symbol="CASH_USD", quantity=10_000, avg_cost=1)
+    store.set_position_baseline(
+        symbol="CASH_USD",
+        quantity=10_000,
+        avg_cost=1,
+        occurred_at=datetime(2026, 8, 1, tzinfo=timezone.utc),
+    )
     contract_id, _ = store.record_option_open(
         underlying_symbol="ABC",
         expiry_date=date(2026, 9, 18),
@@ -75,7 +80,7 @@ def test_short_put_assignment_updates_contract_position_and_cash(tmp_path):
         contracts=1,
         premium_per_share=1,
         opened_date=date(2026, 8, 3),
-        decision_ref="reviews/decisions/ABC-put.md",
+        decision_ref="portfolio/decisions/ABC-put.md",
         execution_ref="broker-option-open-1",
     )
 
@@ -190,13 +195,13 @@ def test_instrument_metadata_survives_position_close(tmp_path):
         region="US",
         theme_tags=["AI", "Cloud"],
         source="research_classification",
-        source_ref="coverage/ABC/status.json",
+        source_ref="research/coverage/ABC/summary.md",
     )
     store.set_instrument_metadata(
         symbol="ABC",
         risk_level="medium",
         source="research_classification",
-        source_ref="coverage/ABC/status.json",
+        source_ref="research/coverage/ABC/summary.md",
     )
     store.set_position_baseline(symbol="CASH_USD", quantity=10_000, avg_cost=1)
     store.set_position_baseline(symbol="ABC", quantity=10, avg_cost=90)

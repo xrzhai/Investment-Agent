@@ -1,5 +1,7 @@
 # 迁移说明
 
+> 历史文档：记录 2026-08 的架构迁移，文中路径（`coverage/`、`data/` 等）与 `status.json` 均为当时布局。当前布局见 [2026-10-reorganization.md](2026-10-reorganization.md)。
+
 ## 已完成的方向变化
 
 仓库已经从“内置 LLM 的 CLI 应用”转为“外部 Agent 可直接阅读的投研知识库，外加
