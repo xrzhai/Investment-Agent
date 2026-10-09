@@ -1,6 +1,6 @@
 # 公司研究视觉资产约定
 
-适用范围：`coverage/{SYMBOL}/` 下的图表、图片和 HTML artifact。
+适用范围：`research/coverage/{SYMBOL}/` 下的图表、图片和 HTML artifact。
 
 目标：
 - `md` 是主入口
@@ -10,7 +10,7 @@
 ## 目录
 
 ```text
-coverage/{SYMBOL}/
+research/coverage/{SYMBOL}/
   current.md
   vN_YYYY-MM-DD.md
   assets/

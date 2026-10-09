@@ -1,6 +1,8 @@
 # SYMBOL — 研究导航
 
-**当前 Thesis：** `vN_YYYY-MM-DD.md`
+**当前正文：** 见 `current.md`
+
+**本摘要基于：** `vN_YYYY-MM-DD.md`（升版后若未同步更新摘要，这里会与 `current.md` 不一致，提示摘要已过期）
 
 **研究信息截至：** YYYY-MM-DD
 

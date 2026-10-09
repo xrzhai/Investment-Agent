@@ -22,5 +22,5 @@
 4. **反证**：什么证据会取消该动作；
 5. **执行边界**：明确说明这不是 execution record。
 
-可以使用 decision template 保存到 `reviews/decisions/`。推理仍在讨论时保持 `draft`；只有
+可以使用 decision template 保存到 `portfolio/decisions/`。推理仍在讨论时保持 `draft`；只有
 用户明确批准后才把 status 改为 `approved`。Agent 生成的 decision 不能自动批准自己。

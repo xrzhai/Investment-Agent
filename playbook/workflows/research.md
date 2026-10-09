@@ -4,7 +4,7 @@
 
 ## 从问题和上下文出发
 
-先理解用户真正想知道什么，再阅读 `config/research-context.md` 以及仓库中与问题有关的
+先理解用户真正想知道什么，再阅读 `research/context.md` 以及仓库中与问题有关的
 thesis、笔记、review、其他公司案例和来源。可以从 summary、index、tags 或 `rg` 开始，
 也可以直接打开用户点名的原文。
 
@@ -29,13 +29,13 @@ thesis、笔记、review、其他公司案例和来源。可以从 summary、ind
 consensus、assumption 和 inference。旧 thesis、笔记和 prior Agent output 可以帮助理解
 思考演化，但不单独证明当前事实。
 
-`facts.jsonl`、`sources.json`、status 和 tags 都是可选辅助。只有在未来检索、追踪或
-核验确实受益时才更新，不为了形式完整而制造记录。
+部分公司保留的 `facts.jsonl`、`sources.json` 是冻结的历史记录，可以直接阅读；新研究不要求
+补充。复核触发和证据缺口写在公司 `tracking.md`。Tags 只在确实有助于未来检索时添加。
 
 ## 留下成果
 
 短期探索可以直接回答。值得延续的内容可以写成自然 Markdown、更新当前 thesis、添加
-idea note 或记录新来源。正式 thesis 更新通常保留新版本和 `current.md` 指针，但文章
+idea note 或记录新来源。正式 thesis 更新通常保留新版本并改写 `current.md`。`current.md` 是唯一的版本指针，status、索引和摘要都不另记"当前版本"；摘要只写"本摘要基于"哪一版。文章
 结构和长度完全由 Agent 决定。
 
 估值属于 Research。个人成本、盈亏和仓位可以在用户讨论组合时加入，但先把商业判断

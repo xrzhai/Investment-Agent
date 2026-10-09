@@ -22,26 +22,33 @@ nul
 .firecrawl/
 htmlcov/
 
-# Database
-data/**
-!data/README.md
+# Private research (2026-10-09 layout). Public: research/README.md, research/context.md,
+# research/coverage/ASSET_CONVENTION.md
+research/**
+!research/README.md
+!research/context.md
+!research/coverage/
+research/coverage/**
+!research/coverage/ASSET_CONVENTION.md
 
-# Private portfolio runtime outputs
-reviews/**
-!reviews/
-!reviews/README.md
+# Private portfolio records and database. Public: portfolio/README.md, principles.md,
+# profile.json, data/README.md
+portfolio/**
+!portfolio/README.md
+!portfolio/principles.md
+!portfolio/profile.json
+!portfolio/data/
+portfolio/data/**
+!portfolio/data/README.md
 Portfolio.xlsx
 Portfolio.backup_before_weight_update_*.xlsx
 ~$*.xlsx
 
-# Private coverage / thesis state
-coverage/*/**
-coverage/COVERAGE_LOG.md
-!coverage/ASSET_CONVENTION.md
-
-# Private research notes
+# Pre-2026-10-09 paths, kept so a stale tool writing to the old layout stays private
+data/**
+reviews/**
+coverage/**
 research_notes/**
-!research_notes/README.md
 
 # Python
 __pycache__/

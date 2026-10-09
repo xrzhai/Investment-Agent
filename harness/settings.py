@@ -10,14 +10,16 @@ class HarnessPaths:
 
     Paths are injected instead of stored as import-time globals so tests and
     alternate private workspaces can use isolated roots.
+
+    Layout: ``research/`` (coverage, topics, macro, context) and
+    ``portfolio/`` (principles, profile, records, data).
     """
 
     root: Path
+    research: Path
     coverage: Path
-    reviews: Path
+    portfolio: Path
     data: Path
-    config: Path
-    research_notes: Path
 
     @classmethod
     def discover(cls, root: str | Path | None = None) -> "HarnessPaths":
@@ -26,13 +28,14 @@ class HarnessPaths:
             if root is not None
             else Path(__file__).resolve().parents[1]
         )
+        research = resolved / "research"
+        portfolio = resolved / "portfolio"
         return cls(
             root=resolved,
-            coverage=resolved / "coverage",
-            reviews=resolved / "reviews",
-            data=resolved / "data",
-            config=resolved / "config",
-            research_notes=resolved / "research_notes",
+            research=research,
+            coverage=research / "coverage",
+            portfolio=portfolio,
+            data=portfolio / "data",
         )
 
     @property
@@ -41,8 +44,12 @@ class HarnessPaths:
 
     @property
     def profile_file(self) -> Path:
-        return self.config / "profile.json"
+        return self.portfolio / "profile.json"
 
     @property
     def principles_file(self) -> Path:
-        return self.config / "principles.md"
+        return self.portfolio / "principles.md"
+
+    @property
+    def research_context_file(self) -> Path:
+        return self.research / "context.md"
