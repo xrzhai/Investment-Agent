@@ -10,6 +10,7 @@ credentials/
 .claude/
 .vscode/
 .venv/
+uv.lock
 .pytest_cache/
 CLAUDE.md
 mine investment policy/

@@ -1,7 +1,7 @@
 # 投资原则
 
 > 这是我的个人投资原则文档，只放跨周期、底层、会约束未来动作的原则。
-> 阶段性市场判断、行业洞察、个股例子和交易解释，应放在 `coverage/`、`reviews/decisions/` 或 `research_notes/`，不要塞进原则。
+> 阶段性市场判断、行业洞察、个股例子和交易解释，应放在 `research/coverage/`（含公司内 `research_notes/`）或 `portfolio/decisions/`，不要塞进原则。
 
 ---
 
@@ -9,7 +9,7 @@
 
 - 原则是约束，不是文章；少就是多。
 - 硬约束优先于偏好：能力圈、thesis、估值、仓位、现金、杠杆和 IC 优先级最高。
-- 具体数字以 `config/profile.json` 和当日 portfolio tools 为准；本文件只解释为什么要这样管。
+- 具体数字以 `portfolio/profile.json` 和当日 portfolio tools 为准；本文件只解释为什么要这样管。
 - 任何 thesis 都必须可证伪：如果正反事实都能被解释成利好，说明它不是投资判断。
 
 ---
