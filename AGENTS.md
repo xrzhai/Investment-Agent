@@ -12,6 +12,8 @@ Harness 的作用是把用户的思想、资料入口和少量可靠工具交给
 
 内容分三个区：`research/`（公司研究、专题、宏观、研究思想）、`portfolio/`（原则、记录、账本）、`playbook/`（工作提示、模板、约定）。工程目录 `harness/`、`scripts/`、`tests/` 在根目录。
 
+独立量化策略研究已迁到同级目录 `../Quant-Research/`，入口为该仓库的 `README.md`，GitHub 为私人仓库 `xrzhai/Quant-Research`。该研究线不套用主观多头框架；回测数据与模拟账本在独立仓库保存。
+
 ## 2. 核心原则
 
 - **上下文用于扩展思考，不用于限制思考。** 可以从摘要或索引开始，也可以在问题展开后自由阅读完整 thesis、历史笔记、其他公司案例、review 和原始来源。
@@ -63,6 +65,7 @@ Harness 的作用是把用户的思想、资料入口和少量可靠工具交给
 | 公司专属补充分析、跟踪笔记 | 该公司 `research_notes/`；持续验证点写 `tracking.md` |
 | 跨公司想法、框架、类比 | `research/topics/`，并在 `research/INDEX.md` 专题表补一行 |
 | 宏观观察 | `research/macro/`，并更新其 `current.md` |
+| 独立量化策略研究与回测实验 | 同级独立仓库 `../Quant-Research/`，从其 `README.md` 导航 |
 | 组合复盘、对账 | `portfolio/reviews/YYYY/` |
 | 决策 / 成交说明 | `portfolio/decisions/` / `portfolio/executions/` |
 | 重要组合或研究活动 | 在 `portfolio/LOG.md` 追加一行 |

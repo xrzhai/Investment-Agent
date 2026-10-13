@@ -6,13 +6,14 @@
 阅读、研究、判断和创作；仓库负责保存用户的投资思想、历史语境、研究材料以及少量
 确实需要确定性的组合工具。
 
-## 三个内容区
+## 内容区
 
 | 区域 | 回答的问题 | 入口 |
 |---|---|---|
 | [`research/`](research/README.md) | 这家公司或机制如何运作，价值如何形成，当前证据支持什么判断？ | `research/INDEX.md`、`research/context.md` |
 | [`portfolio/`](portfolio/README.md) | 组合现在是什么状态，为什么行动，结果与约束是什么？ | `portfolio/LOG.md`、`portfolio/principles.md`、`portfolio/data/investment.db` |
 | [`playbook/`](playbook/README.md) | Agent 如何研究、记录、核验和维护这些内容？ | 工作提示、写作模板、数据约定 |
+| [Quant-Research](https://github.com/xrzhai/Quant-Research)（独立私人仓库） | 独立的量化策略是否有可复核、可执行的收益来源？ | 同级目录 `../Quant-Research/README.md` |
 
 工程目录按惯例留在根目录：`harness/`（Python 包）、`scripts/`（日常脚本）、`tests/`。
 
@@ -68,7 +69,7 @@ LLM 可以直接理解 Markdown。旧 thesis、笔记和 review 不需要转成 
 观察日期和关键假设，但写法、章节和研究路径由 Agent 根据公司决定。
 
 部分公司保留的 `facts.jsonl`、`sources.json` 是冻结的历史记录，可以直接阅读；新研究
-不要求补充结构化记录。研究侧不需要 Python。
+不要求补充结构化记录。公司研究记录不要求依赖 Python。
 
 宏观观察入口：[中美宏观观察](research/macro/README.md)与
 [最新一期](research/macro/current.md)（本地研究记录）。按月观察，半年复核分布、保障和债务。

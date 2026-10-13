@@ -51,6 +51,10 @@ reviews/**
 coverage/**
 research_notes/**
 
+# Quant research moved to ../Quant-Research (private repository).
+# Keep stale writers from adding it back to this public repository.
+quant/
+
 # Python
 __pycache__/
 *.py[cod]
